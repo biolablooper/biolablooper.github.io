@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>医師の 1 事例 — Autolab Loop 48 時間タイムライン</title>
+  <link rel="icon" type="image/svg+xml" href="/brand/logo-icon.svg" />
+  <style>
+    :root {
+      --ink: #0f1f1c;
+      --ink-muted: #4a5c58;
+      --paper: #f5f0e8;
+      --paper-alt: #ebe4d8;
+      --teal: #1a5f7a;
+      --teal-dark: #0c3d3a;
+      --green: #2d6a4f;
+      --hit: #c45c3e;
+      --rule: #d4cfc4;
+      --design: #1a5f7a;
+      --test: #2d6a4f;
+      --analyze: #8b3a62;
+      --approve: #b8860b;
+      --serif: Georgia, 'Times New Roman', 'Yu Mincho', serif;
+      --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand-bar img { width: 36px; height: 36px; }
+    .brand-bar span { font-size: 14px; color: var(--teal); font-weight: 700; letter-spacing: 0.06em; }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      color: var(--teal-dark);
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      color: var(--ink-muted);
+      font-size: 15px;
+      max-width: 720px;
+      margin-bottom: 24px;
+    }
+
+    .case-card {
+      background: #fff;
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .case-card dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-bottom: 4px; }
+    .case-card dd { font-size: 14px; font-weight: 600; }
+
+    .elapsed-banner {
+      background: var(--teal-dark);
+      color: #fff;
+      border-radius: 10px;
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .elapsed-banner .clock {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .elapsed-banner .clock-label { font-size: 13px; opacity: 0.75; }
+
+    .dmta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .dmta-pill::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--teal-dark);
+      color: #fff;
+    }
+
+    .btn-primary:hover { box-shadow: 0 4px 14px rgba(12,61,58,0.3); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--teal-dark);
+      border: 1px solid var(--rule);
+    }
+
+    .speed-group {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .speed-group button {
+      padding: 8px 12px;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid var(--rule);
+      color: var(--ink-muted);
+    }
+
+    .speed-group button.active {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+
+    .scrub-wrap {
+      margin-bottom: 28px;
+    }
+
+    .scrub-wrap input[type="range"] {
+      width: 100%;
+      height: 6px;
+      accent-color: var(--teal-dark);
+      cursor: pointer;
+    }
+
+    .scrub-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 6px;
+    }
+
+    .timeline-track {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 28px;
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: var(--rule);
+      border-radius: 2px;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      width: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+      height: 0;
+      transition: height 0.35s ease;
+    }
+
+    .tl-item {
+      position: relative;
+      padding: 0 0 20px 20px;
+      opacity: 0.35;
+      transition: opacity 0.3s;
+    }
+
+    .tl-item.reached { opacity: 1; }
+    .tl-item.current .tl-dot { transform: scale(1.35); box-shadow: 0 0 0 4px rgba(26,95,122,0.25); }
+
+    .tl-dot {
+      position: absolute;
+      left: -24px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--rule);
+      border: 2px solid #fff;
+      transition: transform 0.25s, background 0.25s;
+    }
+
+    .tl-item.reached .tl-dot { background: var(--teal); }
+    .tl-item.phase-design .tl-dot { background: var(--design); }
+    .tl-item.phase-approve .tl-dot { background: var(--approve); }
+    .tl-item.phase-test .tl-dot { background: var(--test); }
+    .tl-item.phase-analyze .tl-dot { background: var(--analyze); }
+    .tl-item.phase-hit .tl-dot { background: var(--hit); }
+
+    .tl-time {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--teal);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tl-elapsed {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-left: 8px;
+    }
+
+    .tl-title {
+      font-weight: 700;
+      font-size: 15px;
+      margin: 2px 0 4px;
+    }
+
+    .tl-desc {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    .detail-panel {
+      background: #fff;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .detail-header {
+      background: var(--paper-alt);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 16px;
+    }
+
+    .detail-header h2 { font-size: 17px; color: var(--teal-dark); }
+
+    .detail-body { padding: 20px; }
+
+    .detail-body p { font-size: 14px; margin-bottom: 12px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .metric {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .metric .val {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--teal-dark);
+    }
+
+    .metric .val.hit { color: var(--hit); }
+    .metric .val.good { color: var(--green); }
+
+    .metric .lbl { font-size: 11px; color: var(--ink-muted); margin-top: 4px; }
+
+    .plate-mini {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 3px;
+      max-width: 360px;
+      margin: 12px 0;
+    }
+
+    .well {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      background: #e8e4dc;
+      font-size: 0;
+    }
+
+    .well.ctrl-pos { background: #4a9e6a; }
+    .well.ctrl-neg { background: #8b9aab; }
+    .well.hit { background: var(--hit); }
+    .well.compound { background: #7eb8c9; }
+
+    .hit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .hit-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--teal-dark);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .hit-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .hit-table tr:nth-child(even) td { background: var(--paper); }
+
+    .footnote {
+      font-size: 12px;
+      color: var(--ink-muted);
+      border-top: 1px solid var(--rule);
+      padding-top: 20px;
+      margin-top: 12px;
+    }
+
+    .footnote a { color: var(--teal); }
+
+    @media (max-width: 600px) {
+      .speed-group { margin-left: 0; width: 100%; }
+      .elapsed-banner .clock { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand-bar">
+      <img src="/brand/logo-icon.svg" alt="" />
+      <span>AUTOLAB LOOP — 事例デモ</span>
+    </div>
+
+    <h1>当直明けの夜、1 本のアッセイが 36 時間で 2 ラウンド回った</h1>
+    <p class="subtitle">
+      架空の 1 事例です。風湿膠原病内科の山本医師が、痛風急性期の NLRP3 経路を標的とした
+      <strong>96-well 細胞生存率（resazurin）スクリーニング</strong>を Autolab Loop（ハーフループ V0）で回した想定タイムラインです。
+      プレート実測・Z-factor・ヒット well に基づく次ラウンド設計が差分です（構造予測 AI ではありません）。
+    </p>
+
+    <dl class="case-card">
+      <div><dt>医師</dt><dd>山本 健太郎（風湿膠原病内科・大学病院）</dd></div>
+      <div><dt>臨床課題</dt><dd>痛風急性期 — NLRP3 インフラマソーム抑制薬の探索</dd></div>
+      <div><dt>アッセイ</dt><dd>THP-1 + LPS/nigericin · resazurin OD570 · 96-well</dd></div>
+      <div><dt>化合物</dt><dd>ChEMBL MCC950 類縁体 40 種（単回 10 µM）</dd></div>
+      <div><dt>実行形態</dt><dd>ハーフループ V0（設計 OS + 技術者ベンチ + CSV 取込）</dd></div>
+      <div><dt>期間</dt><dd>2026-05-13（火）21:15 〜 2026-05-15（木）10:00</dd></div>
+    </dl>
+
+    <div class="elapsed-banner">
+      <div>
+        <div class="clock-label">開始（研究指示）からの経過</div>
+        <div class="clock" id="elapsed-display">+0時間00分</div>
+      </div>
+      <div>
+        <div class="clock-label">現在フェーズ（DMTA）</div>
+        <div class="dmta-pill" id="dmta-display">Design</div>
+      </div>
+      <div>
+        <div class="clock-label">シミュレーション時刻</div>
+        <div style="font-size:1.1rem;font-weight:700" id="sim-clock">2026/05/13 21:15</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btn-play" type="button">▶ 再生</button>
+      <button class="btn-secondary" id="btn-reset" type="button">最初から</button>
+      <div class="speed-group" id="speed-group">
+        <button type="button" data-speed="1" class="active">1×</button>
+        <button type="button" data-speed="2">2×</button>
+        <button type="button" data-speed="4">4×</button>
+      </div>
+    </div>
+
+    <div class="scrub-wrap">
+      <input type="range" id="scrubber" min="0" max="11" value="0" step="1" />
+      <div class="scrub-labels">
+        <span>5/13 夜 — 設計</span>
+        <span>5/14 昼 — Round 1 結果</span>
+        <span>5/14 夕 — Round 2 結果</span>
+        <span>5/15 朝 — 次設計</span>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-header">
+        <h2 id="detail-title">イベントを選択するか再生してください</h2>
+        <span class="tl-time" id="detail-time"></span>
+      </div>
+      <div class="detail-body" id="detail-body">
+        <p>スライダーを動かすか「再生」で、医師が夜に実験を提案してから結果が返り、再び実験が回るまでの流れを追えます。</p>
+      </div>
+    </div>
+
+    <div class="timeline-track" id="timeline">
+      <div class="timeline-progress" id="timeline-progress"></div>
+    </div>
+
+    <p class="footnote">
+      本ページはプロダクト説明用の<strong>限定事例</strong>です。数値・化合物名はデモ用に構成しています。
+      Autolab Loop の位置づけ: 医師が臨床課題から DMTA を回す Lab-in-the-Loop 実行 OS（ChatGPT / AlphaFold の代替ではなく、
+      <strong>wet lab 実測</strong>で Test→Analyze→次 Design を閉じる基盤）。
+      関連: <a href="autolab-intro.html">紹介動画</a> ·
+      <a href="/login">アプリ</a>
+    </p>
+  </div>
+
+  <script>
+    (function () {
+      const T0 = new Date('2026-05-13T21:15:00+09:00');
+
+      const EVENTS = [
+        {
+          id: 'design-start',
+          at: '2026-05-13T21:15:00+09:00',
+          phase: 'design',
+          dmta: 'Design',
+          title: '当直明け — 研究指示を入力',
+          short: '病棟ラウンド後、タブレットで Autolab を開く',
+          desc: '山本医師は当日の痛風増悪患者 3 例を踏まえ、「NLRP3 経路を抑える MCC950 類縁体を細胞レベルでふるいにかけたい」と自然文で入力。ChatGPT との壁打ちではなく、実験 trail 付きの構造化 Design として記録される。',
+          detail: null
+        },
+        {
+          id: 'design-map',
+          at: '2026-05-13T21:28:00+09:00',
+          phase: 'design',
+          dmta: 'Design',
+          title: 'プレートマップ + ChEMBL ゲート',
+          short: '13 分後 — 96-well レイアウトと 40 化合物リスト',
+          desc: 'Autolab が 96-well プレートマップ（pos/neg/vehicle 各 8 well）と 40 化合物（ChEMBL ID 付き）を提案。ゲートで溶解度フラグ 2 化合物を除外し、代替 2 種に差し替え。',
+          detail: {
+            metrics: [
+              { label: '提案化合物', value: '40', cls: '' },
+              { label: 'ゲート除外', value: '2', cls: '' },
+              { label: 'プレート', value: '96-well', cls: '' }
+            ]
+          }
+        },
+        {
+          id: 'approve-r1',
+          at: '2026-05-13T22:05:00+09:00',
+          phase: 'approve',
+          dmta: 'Design',
+          title: '医師承認 — Round 1 SOP 確定',
+          short: '50 分後 — デジタルサインオフ',
+          desc: 'SOP PDF（培養条件: THP-1, LPS 100 ng/mL 4h → nigericin 10 µM 45min → resazurin 2h → OD570）を確認し承認。監査 trail に「山本 · 22:05 JST」が刻まれる。ベンチは翌朝、技術者の佐藤さんが実行。',
+          detail: {
+            metrics: [
+              { label: '承認まで', value: '50分', cls: '' },
+              { label: '次アクション', value: '翌朝ベンチ', cls: '' }
+            ]
+          }
+        },
+        {
+          id: 'bench-r1',
+          at: '2026-05-14T09:30:00+09:00',
+          phase: 'test',
+          dmta: 'Test',
+          title: 'Round 1 — ベンチ実行開始（ハーフループ）',
+          short: '+12時間15分 — 技術者が承認 SOP に従い setup',
+          desc: '佐藤技術者がタブレットのステップガイドに沿って移液。OT-2 は未導入（V0）。ミス防止のため well 照合 QR を各列で読み取り。培養・刺激・試薬添加は手作業だが、記録は Autolab に自動同期。',
+          detail: null
+        },
+        {
+          id: 'incubate-r1',
+          at: '2026-05-14T11:45:00+09:00',
+          phase: 'test',
+          dmta: 'Test',
+          title: 'インキュベーション完了',
+          short: '+14時間30分 — プレートリーダーへ',
+          desc: '最終 resazurin 2h 終了。プレートを BioTek Synergy H1 へ搬送。読み取り予約 13:40。',
+          detail: null
+        },
+        {
+          id: 'read-r1',
+          at: '2026-05-14T13:52:00+09:00',
+          phase: 'analyze',
+          dmta: 'Analyze',
+          title: 'Round 1 — プレートリーダー CSV 取込',
+          short: '+16時間37分 — OD570 行列が Autolab に入る',
+          desc: 'USB 経由で export した CSV を共有フォルダに置くと、12 秒でパース完了。384/96 形式自動判定。陽性対照（MCC950 10 µM）平均 OD 0.41、陰性（DMSO）平均 1.02。',
+          detail: null
+        },
+        {
+          id: 'result-r1',
+          at: '2026-05-14T14:02:00+09:00',
+          phase: 'hit',
+          dmta: 'Analyze',
+          title: 'Round 1 解析 — Z-factor とヒット 3 件',
+          short: '+16時間47分 — ヒット well 確定',
+          desc: 'Z-factor = 0.58（良好）。% inhibition > 60% かつ SNR > 3 の条件で 3 ヒット。ヒット ranking はプレート実測値のみ（in silico 予測は使わない）。',
+          detail: {
+            metrics: [
+              { label: 'Z-factor', value: '0.58', cls: 'good' },
+              { label: 'ヒット数', value: '3 / 40', cls: 'hit' },
+              { label: '最優先', value: 'AL-017', cls: 'hit' }
+            ],
+            plate: true,
+            hits: [
+              { well: 'H07', id: 'AL-017', chembl: 'CHEMBL3989886', inh: '71%', note: 'MCC950 類縁 · 最高活性' },
+              { well: 'B11', id: 'AL-012', chembl: 'CHEMBL3709842', inh: '68%', note: '2 位' },
+              { well: 'F04', id: 'AL-031', chembl: 'CHEMBL4521091', inh: '65%', note: '3 位' }
+            ]
+          }
+        },
+        {
+          id: 'design-r2',
+          at: '2026-05-14T14:18:00+09:00',
+          phase: 'design',
+          dmta: 'Design',
+          title: 'Round 2 用量反応 — 自動設計 → スマホ承認',
+          short: '+17時間03分 — 8-point dose-response プレート',
+          desc: '上位 3 化合物 + MCC950 参照で 8 点希釈（0.01–10 µM）の 96-well マップを生成。山本医師は外来の合間にスマホで 16 分以内に承認。',
+          detail: {
+            metrics: [
+              { label: 'Round 2 化合物', value: '4', cls: '' },
+              { label: '希釈点', value: '8点', cls: '' },
+              { label: '設計→承認', value: '16分', cls: 'good' }
+            ]
+          }
+        },
+        {
+          id: 'bench-r2',
+          at: '2026-05-14T16:00:00+09:00',
+          phase: 'test',
+          dmta: 'Test',
+          title: 'Round 2 — ベンチ再開',
+          short: '+18時間45分 — 同日午後に 2 ラウンド目',
+          desc: '佐藤技術者が午後枠で Round 2 を setup。同一 SOP ベースで刺激条件は固定。化合物のみ用量系列に変更。',
+          detail: null
+        },
+        {
+          id: 'result-r2',
+          at: '2026-05-14T18:45:00+09:00',
+          phase: 'hit',
+          dmta: 'Analyze',
+          title: 'Round 2 結果 — IC50 確定',
+          short: '+21時間30分 — 最優先候補 AL-017',
+          desc: '4PL フィット完了。AL-017 の IC50 = 0.82 µM（MCC950 参照 0.61 µM）。Z\'-factor 0.54。山本医師にプッシュ通知。「確認実験（12 well）を回しますか？」',
+          detail: {
+            metrics: [
+              { label: 'AL-017 IC50', value: '0.82µM', cls: 'hit' },
+              { label: 'MCC950 IC50', value: '0.61µM', cls: '' },
+              { label: 'Z\'-factor', value: '0.54', cls: 'good' }
+            ],
+            hits: [
+              { well: '—', id: 'AL-017', chembl: 'CHEMBL3989886', inh: 'IC50 0.82µM', note: '次ラウンド推奨' },
+              { well: '—', id: 'AL-012', chembl: 'CHEMBL3709842', inh: 'IC50 2.1µM', note: 'バックアップ' },
+              { well: '—', id: 'AL-031', chembl: 'CHEMBL4521091', inh: 'IC50 4.8µM', note: '保留' }
+            ]
+          }
+        },
+        {
+          id: 'design-r3',
+          at: '2026-05-14T21:00:00+09:00',
+          phase: 'design',
+          dmta: 'Design',
+          title: 'ループ closure — Round 3 確認実験案',
+          short: '+23時間45分 — 同日夜に次 Design',
+          desc: 'Autolab が AL-017 の triplicate 確認（12 well）+ 新規 ChEMBL 類縁体 12 候補（Round 1 ヒット周辺の SAR 展開）を提案。翌朝実行予約。',
+          detail: {
+            metrics: [
+              { label: '確認 well', value: '12', cls: '' },
+              { label: '新規候補', value: '12', cls: '' },
+              { label: '累計ラウンド', value: '2→3', cls: '' }
+            ]
+          }
+        },
+        {
+          id: 'bench-r3',
+          at: '2026-05-15T10:00:00+09:00',
+          phase: 'test',
+          dmta: 'Test',
+          title: 'Round 3 — 確認実験 開始',
+          short: '+36時間45分 — 3 ラウンド目が回っている',
+          desc: '木曜午前、確認プレートがベンチで開始。ここまでのサイクル: 火曜夜の 1 行指示 → 水曜 Round 1 結果 → 水曜夕 Round 2 IC50 → 木曜朝 Round 3 実行中。DMTA ループが「Excel + 口頭引き継ぎ」より速く閉じている状態。',
+          detail: {
+            metrics: [
+              { label: '指示→R1結果', value: '≈17h', cls: 'good' },
+              { label: 'R1→R2結果', value: '≈5h', cls: 'good' },
+              { label: '合計サイクル', value: '36h45m', cls: '' }
+            ]
+          }
+        }
+      ];
+
+      const HIT_WELLS = { 'H07': true, 'B11': true, 'F04': true };
+      const ROWS = 'ABCDEFGH';
+      const COLS = 12;
+
+      let index = 0;
+      let playing = false;
+      let playTimer = null;
+      let speed = 1;
+
+      const el = {
+        timeline: document.getElementById('timeline'),
+        progress: document.getElementById('timeline-progress'),
+        scrubber: document.getElementById('scrubber'),
+        elapsed: document.getElementById('elapsed-display'),
+        dmta: document.getElementById('dmta-display'),
+        simClock: document.getElementById('sim-clock'),
+        detailTitle: document.getElementById('detail-title'),
+        detailTime: document.getElementById('detail-time'),
+        detailBody: document.getElementById('detail-body'),
+        btnPlay: document.getElementById('btn-play'),
+        btnReset: document.getElementById('btn-reset'),
+        speedGroup: document.getElementById('speed-group')
+      };
+
+      function msFromStart(iso) {
+        return new Date(iso) - T0;
+      }
+
+      function formatElapsed(ms) {
+        const neg = ms < 0;
+        const abs = Math.abs(ms);
+        const h = Math.floor(abs / 3600000);
+        const m = Math.floor((abs % 3600000) / 60000);
+        return (neg ? '−' : '+') + h + '時間' + String(m).padStart(2, '0') + '分';
+      }
+
+      function formatSim(iso) {
+        const d = new Date(iso);
+        const p = (n) => String(n).padStart(2, '0');
+        return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' +
+          p(d.getHours()) + ':' + p(d.getMinutes());
+      }
+
+      function buildPlate() {
+        const grid = document.createElement('div');
+        grid.className = 'plate-mini';
+        for (let r = 0; r < 8; r++) {
+          for (let c = 1; c <= COLS; c++) {
+            const wellId = ROWS[r] + String(c).padStart(2, '0');
+            const cell = document.createElement('div');
+            cell.className = 'well';
+            cell.title = wellId;
+            if (c <= 2) cell.classList.add('ctrl-neg');
+            else if (c === 3 || c === 4) cell.classList.add('ctrl-pos');
+            else if (HIT_WELLS[wellId]) cell.classList.add('hit');
+            else if (c >= 5) cell.classList.add('compound');
+            grid.appendChild(cell);
+          }
+        }
+        return grid;
+      }
+
+      function renderDetail(ev) {
+        el.detailTitle.textContent = ev.title;
+        el.detailTime.textContent = formatSim(ev.at) + ' · ' + formatElapsed(msFromStart(ev.at));
+        let html = '<p>' + ev.desc + '</p>';
+        const d = ev.detail;
+        if (d) {
+          if (d.metrics) {
+            html += '<div class="metrics">';
+            d.metrics.forEach(function (m) {
+              html += '<div class="metric"><div class="val ' + (m.cls || '') + '">' + m.value +
+                '</div><div class="lbl">' + m.label + '</div></div>';
+            });
+            html += '</div>';
+          }
+          if (d.plate) {
+            html += '<p><strong>Round 1 プレート（ヒット well 赤）</strong></p>';
+            const wrap = document.createElement('div');
+            el.detailBody.innerHTML = html;
+            el.detailBody.appendChild(buildPlate());
+            html = '';
+          }
+          if (d.hits) {
+            html += '<table class="hit-table"><thead><tr><th>Well</th><th>ID</th><th>ChEMBL</th><th>活性</th><th>備考</th></tr></thead><tbody>';
+            d.hits.forEach(function (h) {
+              html += '<tr><td>' + h.well + '</td><td>' + h.id + '</td><td>' + h.chembl +
+                '</td><td>' + h.inh + '</td><td>' + h.note + '</td></tr>';
+            });
+            html += '</tbody></table>';
+          }
+        }
+        if (html) el.detailBody.innerHTML = html;
+      }
+
+      function renderTimelineItems() {
+        EVENTS.forEach(function (ev, i) {
+          const item = document.createElement('div');
+          item.className = 'tl-item phase-' + ev.phase;
+          item.dataset.index = i;
+          item.innerHTML =
+            '<div class="tl-dot"></div>' +
+            '<div class="tl-time">' + formatSim(ev.at) +
+            '<span class="tl-elapsed">' + formatElapsed(msFromStart(ev.at)) + '</span></div>' +
+            '<div class="tl-title">' + ev.title + '</div>' +
+            '<div class="tl-desc">' + ev.short + '</div>';
+          item.addEventListener('click', function () {
+            stopPlay();
+            goTo(i);
+          });
+          el.timeline.appendChild(item);
+        });
+      }
+
+      function goTo(i) {
+        index = Math.max(0, Math.min(EVENTS.length - 1, i));
+        const ev = EVENTS[index];
+        el.scrubber.value = index;
+        el.elapsed.textContent = formatElapsed(msFromStart(ev.at));
+        el.dmta.textContent = ev.dmta;
+        el.simClock.textContent = formatSim(ev.at);
+        renderDetail(ev);
+
+        const items = el.timeline.querySelectorAll('.tl-item');
+        items.forEach(function (node, j) {
+          node.classList.toggle('reached', j <= index);
+          node.classList.toggle('current', j === index);
+        });
+
+        const track = el.timeline;
+        const totalH = track.scrollHeight - 16;
+        const frac = index / (EVENTS.length - 1);
+        el.progress.style.height = (frac * totalH) + 'px';
+
+        const current = items[index];
+        if (current) current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function stopPlay() {
+        playing = false;
+        el.btnPlay.textContent = '▶ 再生';
+        if (playTimer) {
+          clearInterval(playTimer);
+          playTimer = null;
+        }
+      }
+
+      function startPlay() {
+        if (index >= EVENTS.length - 1) index = -1;
+        playing = true;
+        el.btnPlay.textContent = '⏸ 一時停止';
+        const stepMs = 2200 / speed;
+        playTimer = setInterval(function () {
+          if (index >= EVENTS.length - 1) {
+            stopPlay();
+            return;
+          }
+          goTo(index + 1);
+        }, stepMs);
+      }
+
+      function togglePlay() {
+        if (playing) stopPlay();
+        else startPlay();
+      }
+
+      el.btnPlay.addEventListener('click', togglePlay);
+      el.btnReset.addEventListener('click', function () {
+        stopPlay();
+        goTo(0);
+      });
+
+      el.scrubber.addEventListener('input', function () {
+        stopPlay();
+        goTo(Number(el.scrubber.value));
+      });
+
+      el.speedGroup.addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-speed]');
+        if (!btn) return;
+        speed = Number(btn.dataset.speed);
+        el.speedGroup.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('active', b === btn);
+        });
+        if (playing) {
+          stopPlay();
+          startPlay();
+        }
+      });
+
+      el.scrubber.max = EVENTS.length - 1;
+      renderTimelineItems();
+      goTo(0);
+    })();
+  </script>
+</body>
+</html>

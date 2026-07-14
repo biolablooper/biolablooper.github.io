@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Autolab Loop — 紹介動画</title>
+  <link rel="icon" type="image/svg+xml" href="/brand/logo-icon.svg" />
+  <style>
+    :root {
+      --ink: #0f1f1c;
+      --ink-muted: #4a5c58;
+      --paper: #f5f0e8;
+      --paper-alt: #ebe4d8;
+      --teal: #1a5f7a;
+      --teal-dark: #0c3d3a;
+      --green: #2d6a4f;
+      --hit: #c45c3e;
+      --cancer: #8b3a62;
+      --cancer-light: #c45c8a;
+      --rule: #d4cfc4;
+      --serif: Georgia, 'Times New Roman', 'Yu Mincho', serif;
+      --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #111; font-family: var(--sans); }
+
+    #wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+
+    #stage {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--paper);
+      transform-origin: center center;
+    }
+
+    #scene-canvas {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+    }
+
+    .scene-ui {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      padding: 80px 100px 160px;
+      text-align: center;
+    }
+
+    .kicker {
+      font-size: 20px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .kicker--light { color: rgba(255,255,255,0.55); }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 72px;
+      font-weight: 600;
+      line-height: 1.18;
+      color: var(--ink);
+      max-width: 1300px;
+    }
+
+    h1 em { font-style: italic; color: var(--teal-dark); }
+    h1.light { color: #fff; }
+    h1.light em { color: #a8dadc; }
+
+    .lead {
+      font-size: 30px;
+      line-height: 1.55;
+      color: var(--ink-muted);
+      max-width: 1000px;
+      margin-top: 24px;
+    }
+
+    .lead.light { color: rgba(255,255,255,0.78); }
+
+    /* Logo scene */
+    #ui-open .logo-wrap {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 36px;
+      filter: drop-shadow(0 20px 40px rgba(12, 61, 58, 0.25));
+    }
+
+    /* DMTA */
+    #ui-dmta { justify-content: flex-end; padding-bottom: 200px; }
+
+    .dmta-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      width: 100%;
+      max-width: 1500px;
+    }
+
+    .dmta-step {
+      flex: 1;
+      padding: 28px 20px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.07);
+      opacity: 0.35;
+    }
+
+    .dmta-step.on {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(168, 218, 220, 0.6);
+      opacity: 1;
+      box-shadow: 0 0 32px rgba(168, 218, 220, 0.2);
+    }
+
+    .dmta-step .letter { font-size: 40px; font-weight: 800; color: #a8dadc; }
+    .dmta-step .name { font-size: 24px; font-weight: 700; color: #fff; margin: 6px 0; }
+    .dmta-step .desc { font-size: 17px; color: rgba(255,255,255,0.72); line-height: 1.4; }
+
+    /* Subtitles */
+    #subtitle-bar {
+      position: absolute;
+      left: 80px;
+      right: 80px;
+      bottom: 48px;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+    }
+
+    #subtitle-inner {
+      max-width: 1500px;
+      padding: 18px 36px;
+      background: rgba(12, 61, 58, 0.88);
+      border-radius: 8px;
+      border: 1px solid rgba(168, 218, 220, 0.25);
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #subtitle-text {
+      font-size: 32px;
+      line-height: 1.45;
+      color: #fff;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    #subtitle-text.empty { opacity: 0.35; font-size: 24px; }
+
+    /* Controls */
+    #controls {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0,0,0,0.82);
+      padding: 12px 20px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    #controls button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--teal);
+      color: #fff;
+    }
+
+    #controls button:hover { background: #237a96; }
+    #controls button:disabled { opacity: 0.5; cursor: wait; }
+    #controls button.ghost { background: rgba(255,255,255,0.15); }
+    #controls button.ghost.on { background: var(--green); }
+
+    #progress-bar {
+      width: 180px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #progress-fill { height: 100%; width: 0%; background: #a8dadc; }
+
+    body.recording #controls { opacity: 0.25; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="stage">
+      <canvas id="scene-canvas" width="1920" height="1080"></canvas>
+
+      <div class="scene-ui" id="ui-open">
+        <div class="logo-wrap">
+          <svg viewBox="0 0 64 64" width="140" height="140" aria-hidden="true">
+            <rect width="64" height="64" rx="14" fill="#0c3d3a"/>
+            <path d="M32 8a24 24 0 1 1-16.97 7.03" stroke="#a8dadc" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M12 8l4 7-7 1" fill="#a8dadc"/>
+            <g transform="translate(18 18)">
+              <rect width="12" height="12" rx="3" fill="#2d6a4f" opacity="0.85"/>
+              <rect x="16" width="12" height="12" rx="3" fill="#1a5f7a" opacity="0.7"/>
+              <rect y="16" width="12" height="12" rx="3" fill="#1a5f7a" opacity="0.7"/>
+              <rect x="16" y="16" width="12" height="12" rx="3" fill="#c45c3e"/>
+            </g>
+            <circle cx="32" cy="32" r="3" fill="#f5f0e8"/>
+          </svg>
+        </div>
+        <p class="kicker">Lab-in-the-Loop · 生命科学</p>
+        <h1>Autolab <em>Loop</em></h1>
+        <p class="lead">医師主導の創薬研究 — 設計から実験まで</p>
+      </div>
+
+      <div class="scene-ui" id="ui-doctor">
+        <p class="kicker">Clinical question</p>
+        <h1>病棟の疑問が、<em>研究の起点</em>になる</h1>
+      </div>
+
+      <div class="scene-ui" id="ui-cancer">
+        <p class="kicker">Target · がん細胞</p>
+        <h1>増殖するがん細胞に、<em>効く分子</em>を探す</h1>
+        <p class="lead">テキストだけでは、実験は動かない</p>
+      </div>
+
+      <div class="scene-ui" id="ui-dmta">
+        <p class="kicker kicker--light">Core loop</p>
+        <h1 class="light"><em>DMTA</em> でループを閉じる</h1>
+        <div class="dmta-row">
+          <div class="dmta-step" data-step="0"><div class="letter">D</div><div class="name">Design</div><div class="desc">LLM 実験設計</div></div>
+          <div class="dmta-step" data-step="1"><div class="letter">M</div><div class="name">Make</div><div class="desc">分子 · プレート</div></div>
+          <div class="dmta-step" data-step="2"><div class="letter">T</div><div class="name">Test</div><div class="desc">医師承認 · 実行</div></div>
+          <div class="dmta-step" data-step="3"><div class="letter">A</div><div class="name">Analyze</div><div class="desc">ヒット → 次候補</div></div>
+        </div>
+      </div>
+
+      <div class="scene-ui" id="ui-robot">
+        <p class="kicker">Physical AI</p>
+        <h1>ロボットが<em>プレート</em>を動かす</h1>
+        <p class="lead">医師の承認のあと、液体処理ロボが分注</p>
+      </div>
+
+      <div class="scene-ui" id="ui-plate">
+        <p class="kicker">Test layer</p>
+        <h1>384-well <em>実測</em>が正本</h1>
+        <p class="lead">吸光度行列 · Z-factor · ヒット ranking</p>
+      </div>
+
+      <div class="scene-ui" id="ui-cta">
+        <p class="kicker kicker--light">Autolab Loop</p>
+        <h1 class="light">臨床の問いを、<em>実験の循環</em>に変える</h1>
+        <p class="lead light" style="margin-top:32px;font-size:36px;">localhost:8000</p>
+      </div>
+
+      <div id="subtitle-bar">
+        <div id="subtitle-inner">
+          <p id="subtitle-text" class="empty">字幕がここに表示されます</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-play" type="button">▶ 再生</button>
+    <button id="btn-restart" type="button">↺</button>
+    <button id="btn-voice" type="button" class="ghost on">🔊 ナレーション ON</button>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <span id="time-label">0:00 / 1:00</span>
+    <button id="btn-record" type="button">● WebM 録画</button>
+  </div>
+
+  <script>
+    const DURATION = 60000;
+
+    const CUES = [
+      { id: 0, start: 400, end: 6800, text: 'Autolab Loop。医師主導の創薬研究を、設計から実験まで一続きに回します。' },
+      { id: 1, start: 7000, end: 14800, text: '病棟の臨床課題から研究が始まる。文献調査は AI でもできる — しかしプレート実験は別の仕組みが必要です。' },
+      { id: 2, start: 15000, end: 22800, text: 'がん細胞の増殖を抑える分子を探す。予測だけでは、実験室の実測は動きません。' },
+      { id: 3, start: 23000, end: 34800, text: 'Design、Make、Test、Analyze。承認とプレート実測で、解析から次の設計へループを閉じます。' },
+      { id: 4, start: 35000, end: 44800, text: '医師が承認したあと、液体処理ロボが分注。段階的に自動化を広げます。' },
+      { id: 5, start: 45000, end: 52800, text: '384-well の吸光度データと Z-factor。実測 trail が、次の候補選定の起点になります。' },
+      { id: 6, start: 53000, end: 59000, text: 'Autolab Loop — 臨床の問いを、実験の循環に変える。' },
+    ];
+
+    const SCENES = [
+      { id: 'open', start: 0, end: 7000 },
+      { id: 'doctor', start: 7000, end: 15000 },
+      { id: 'cancer', start: 15000, end: 23000 },
+      { id: 'dmta', start: 23000, end: 35000 },
+      { id: 'robot', start: 35000, end: 45000 },
+      { id: 'plate', start: 45000, end: 53000 },
+      { id: 'cta', start: 53000, end: 60000 },
+    ];
+
+    const stage = document.getElementById('stage');
+    const canvas = document.getElementById('scene-canvas');
+    const ctx = canvas.getContext('2d');
+    const subtitleText = document.getElementById('subtitle-text');
+    const progressFill = document.getElementById('progress-fill');
+    const timeLabel = document.getElementById('time-label');
+    const btnPlay = document.getElementById('btn-play');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnVoice = document.getElementById('btn-voice');
+    const btnRecord = document.getElementById('btn-record');
+
+    let t = 0;
+    let playing = false;
+    let lastTs = null;
+    let narrationOn = true;
+    const spoken = new Set();
+    let jaVoice = null;
+
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function lerp(a, b, p) { return a + (b - a) * p; }
+    function easeOut(x) { return 1 - Math.pow(1 - x, 3); }
+    function easeInOut(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+    function sceneP(now, start, end) { return clamp((now - start) / (end - start), 0, 1); }
+    function fmt(ms) {
+      const s = Math.floor(ms / 1000);
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function fitStage() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080) * 0.96;
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    function loadVoices() {
+      const voices = speechSynthesis.getVoices();
+      jaVoice = voices.find((v) => v.lang.startsWith('ja')) || null;
+    }
+    speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function speak(text) {
+      if (!narrationOn) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = 0.92;
+      u.pitch = 1;
+      if (jaVoice) u.voice = jaVoice;
+      speechSynthesis.speak(u);
+    }
+
+    function updateNarration(now) {
+      if (!playing || !narrationOn) return;
+      for (const cue of CUES) {
+        if (now >= cue.start && !spoken.has(cue.id)) {
+          spoken.add(cue.id);
+          speak(cue.text);
+        }
+      }
+    }
+
+    function updateSubtitle(now) {
+      const cue = CUES.find((c) => now >= c.start && now < c.end);
+      if (cue) {
+        subtitleText.textContent = cue.text;
+        subtitleText.classList.remove('empty');
+      } else if (now < CUES[0].start) {
+        subtitleText.textContent = '';
+        subtitleText.classList.add('empty');
+      } else if (now >= CUES[CUES.length - 1].end) {
+        subtitleText.textContent = CUES[CUES.length - 1].text;
+        subtitleText.classList.remove('empty');
+      }
+    }
+
+    function setUiOpacity(id, opacity) {
+      const el = document.getElementById(`ui-${id}`);
+      if (el) el.style.opacity = String(opacity);
+    }
+
+    /* Cancer cell blobs */
+    const cells = Array.from({ length: 7 }, (_, i) => ({
+      x: 300 + (i % 4) * 420 + Math.random() * 80,
+      y: 280 + Math.floor(i / 4) * 320 + Math.random() * 60,
+      r: 55 + Math.random() * 45,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.0008 + Math.random() * 0.0006,
+      lobes: 5 + Math.floor(Math.random() * 4),
+    }));
+
+    function drawCellBlob(cx, cy, r, lobes, wobble, alpha) {
+      ctx.beginPath();
+      for (let i = 0; i <= 64; i++) {
+        const ang = (i / 64) * Math.PI * 2;
+        const bump = 1 + 0.14 * Math.sin(ang * lobes + wobble);
+        const rr = r * bump;
+        const px = cx + Math.cos(ang) * rr;
+        const py = cy + Math.sin(ang) * rr;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      const grad = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.2, r * 0.1, cx, cy, r * 1.2);
+      grad.addColorStop(0, `rgba(220, 120, 160, ${alpha})`);
+      grad.addColorStop(0.6, `rgba(139, 58, 98, ${alpha})`);
+      grad.addColorStop(1, `rgba(90, 30, 60, ${alpha * 0.8})`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(196, 92, 62, ${alpha * 0.35})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawDoctorScene(now, p) {
+      ctx.fillStyle = '#eef6f4';
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      /* hospital window light */
+      const lg = ctx.createLinearGradient(0, 0, 1920, 1080);
+      lg.addColorStop(0, '#f5f0e8');
+      lg.addColorStop(1, '#dce8e4');
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      const docX = lerp(700, 820, easeOut(Math.min(p * 1.5, 1)));
+      const docY = 520;
+
+      /* doctor silhouette */
+      ctx.save();
+      ctx.translate(docX, docY);
+      ctx.globalAlpha = easeOut(clamp(p * 1.2, 0, 1));
+
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(0, -180, 55, 65, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#f8f6f2';
+      ctx.fillRect(-70, -110, 140, 200);
+      ctx.fillStyle = varTeal();
+      ctx.fillRect(-70, -30, 140, 8);
+
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(-90, -110);
+      ctx.lineTo(-120, 80);
+      ctx.lineTo(120, 80);
+      ctx.lineTo(90, -110);
+      ctx.closePath();
+      ctx.fill();
+
+      /* stethoscope */
+      ctx.strokeStyle = varTealDark();
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(30, -150, 25, 0.3, Math.PI - 0.3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(30, -125, 12, 0, Math.PI * 2);
+      ctx.strokeStyle = varHit();
+      ctx.stroke();
+
+      /* tablet with question */
+      const tabP = easeOut(clamp((p - 0.25) / 0.6, 0, 1));
+      ctx.globalAlpha = tabP;
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = varRule();
+      ctx.lineWidth = 2;
+      roundRect(ctx, 120, -60, 200, 140, 10);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = varHit();
+      ctx.font = '600 16px sans-serif';
+      ctx.fillText('がん細胞 × 低分子', 140, -20);
+      ctx.fillStyle = varInkMuted();
+      ctx.font = '14px sans-serif';
+      ctx.fillText('効く候補を見つけたい', 140, 5);
+      ctx.fillStyle = varTeal();
+      ctx.fillRect(140, 30, 160, 6);
+      ctx.fillRect(140, 45, 120, 6);
+
+      ctx.restore();
+
+      /* patient bed hint */
+      ctx.globalAlpha = 0.25 * easeOut(p);
+      ctx.fillStyle = varTeal();
+      roundRect(ctx, 1050, 580, 420, 120, 12);
+      ctx.fill();
+    }
+
+    function drawCancerScene(now, p) {
+      ctx.fillStyle = '#1a1020';
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      const bg = ctx.createRadialGradient(960, 540, 100, 960, 540, 900);
+      bg.addColorStop(0, '#2a1530');
+      bg.addColorStop(1, '#0f0812');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      for (const cell of cells) {
+        const pulse = 1 + 0.06 * Math.sin(now * cell.speed * 1000 + cell.phase);
+        const alpha = easeOut(clamp(p * 1.3 - 0.1, 0, 1));
+        drawCellBlob(cell.x, cell.y, cell.r * pulse, cell.lobes, now * cell.speed * 1000 + cell.phase, alpha);
+      }
+
+      /* chat bubble fading */
+      const chatA = 1 - easeOut(clamp((p - 0.35) / 0.4, 0, 1));
+      if (chatA > 0.05) {
+        ctx.globalAlpha = chatA * 0.85;
+        ctx.fillStyle = '#fff';
+        roundRect(ctx, 1300, 200, 380, 160, 16);
+        ctx.fill();
+        ctx.fillStyle = varInkMuted();
+        ctx.font = '22px sans-serif';
+        ctx.fillText('「候補分子を提案します」', 1330, 260);
+        ctx.font = '18px sans-serif';
+        ctx.fillText('（テキストのみ — プレートは動かない）', 1330, 300);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawDmtaBg(now, p) {
+      ctx.fillStyle = varTealDark();
+      ctx.fillRect(0, 0, 1920, 1080);
+      const g = ctx.createRadialGradient(960, 400, 50, 960, 540, 800);
+      g.addColorStop(0, 'rgba(168,218,220,0.12)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      const stepIdx = Math.floor(p * 4.2);
+      document.querySelectorAll('.dmta-step').forEach((el, i) => {
+        el.classList.toggle('on', i <= stepIdx);
+      });
+    }
+
+    function drawRobotScene(now, p) {
+      ctx.fillStyle = varPaperAlt();
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      /* bench */
+      ctx.fillStyle = '#fff';
+      roundRect(ctx, 480, 620, 960, 40, 6);
+      ctx.fill();
+
+      /* microplate */
+      const plateX = 720;
+      const plateY = 500;
+      ctx.fillStyle = '#f0ece4';
+      ctx.strokeStyle = varRule();
+      ctx.lineWidth = 2;
+      roundRect(ctx, plateX, plateY, 480, 320, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 12; c++) {
+          const wx = plateX + 36 + c * 36;
+          const wy = plateY + 36 + r * 34;
+          ctx.beginPath();
+          ctx.arc(wx, wy, 10, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(200,213,208,${0.5 + (r + c) * 0.015})`;
+          ctx.fill();
+        }
+      }
+
+      /* robot arm */
+      const armP = easeInOut(clamp(p * 1.1, 0, 1));
+      const dropY = lerp(180, 560, armP);
+      const armX = 960;
+
+      ctx.strokeStyle = varTealDark();
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(armX, 80);
+      ctx.lineTo(armX, 200);
+      ctx.lineTo(armX + lerp(0, 40, armP), dropY - 80);
+      ctx.stroke();
+
+      ctx.fillStyle = varTeal();
+      roundRect(ctx, armX - 18, dropY - 120, 36, 100, 4);
+      ctx.fill();
+
+      /* droplet */
+      if (armP > 0.55 && armP < 0.95) {
+        const dropA = Math.sin((armP - 0.55) / 0.4 * Math.PI);
+        ctx.fillStyle = `rgba(45, 106, 79, ${dropA})`;
+        ctx.beginPath();
+        ctx.ellipse(armX + 40, dropY - 20, 8, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      /* highlight well */
+      if (armP > 0.7) {
+        ctx.beginPath();
+        ctx.arc(plateX + 36 + 5 * 36, plateY + 36 + 3 * 34, 14, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(196, 92, 62, ${easeOut((armP - 0.7) / 0.3)})`;
+        ctx.fill();
+      }
+
+      ctx.fillStyle = varTealDark();
+      ctx.font = '600 22px sans-serif';
+      ctx.fillText('Physical AI · 医師承認済み', 760, 900);
+    }
+
+    const hitWells = new Set(['B3','C7','D2','E9','F5','G8','H4','A11','J6']);
+    const wells = [];
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 16; c++) {
+        wells.push({
+          r, c,
+          label: String.fromCharCode(65 + r) + (c + 1),
+          base: 0.5 + Math.random() * 0.15,
+        });
+      }
+    }
+
+    function drawPlateScene(now, p) {
+      ctx.fillStyle = varPaper();
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      const px = 980;
+      const py = 260;
+      const pw = 640;
+      const ph = 420;
+
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = varRule();
+      ctx.lineWidth = 2;
+      roundRect(ctx, px, py, pw, ph, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      const cellW = (pw - 56) / 16;
+      const cellH = (ph - 56) / 10;
+
+      for (const well of wells) {
+        const cx = px + 28 + well.c * cellW + cellW / 2;
+        const cy = py + 28 + well.r * cellH + cellH / 2;
+        const radius = Math.min(cellW, cellH) * 0.32;
+        const delay = (well.r * 16 + well.c) / 160;
+        const local = clamp((p - delay * 0.5) / 0.5, 0, 1);
+        const isHit = hitWells.has(well.label);
+        let color = `rgba(200,213,208,${well.base})`;
+        if (isHit && local > 0) {
+          color = `rgba(196,92,62,${lerp(0.35, 0.95, easeOut(local))})`;
+        }
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        if (isHit && local > 0.6) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(196,92,62,${(local - 0.6) * 0.4})`;
+          ctx.fill();
+        }
+      }
+
+      ctx.fillStyle = varTealDark();
+      ctx.font = '600 28px sans-serif';
+      ctx.fillText('384-well readout → 次 12 候補', px, py + ph + 60);
+    }
+
+    function drawCtaScene(now, p) {
+      const g = ctx.createLinearGradient(0, 0, 1920, 1080);
+      g.addColorStop(0, varTealDark());
+      g.addColorStop(1, '#134e4a');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      const logoA = easeOut(clamp(p * 1.5, 0, 1));
+      ctx.globalAlpha = logoA;
+      ctx.save();
+      ctx.translate(960, 380);
+      ctx.scale(1.6, 1.6);
+      drawLogoMark(ctx, 0, 0, 64);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawLogoMark(c, ox, oy, size) {
+      const s = size / 64;
+      c.save();
+      c.translate(ox - size / 2, oy - size / 2);
+      c.scale(s, s);
+      c.fillStyle = '#0c3d3a';
+      roundRect(c, 0, 0, 64, 64, 14);
+      c.fill();
+      c.strokeStyle = '#a8dadc';
+      c.lineWidth = 3;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.arc(32, 32, 24, -Math.PI / 2, Math.PI * 0.85);
+      c.stroke();
+      c.fillStyle = '#a8dadc';
+      c.beginPath();
+      c.moveTo(12, 8);
+      c.lineTo(16, 15);
+      c.lineTo(9, 16);
+      c.fill();
+      const wells = [[0,0,'#2d6a4f'],[16,0,'#1a5f7a'],[0,16,'#1a5f7a'],[16,16,'#c45c3e']];
+      for (const [x, y, col] of wells) {
+        c.fillStyle = col;
+        roundRect(c, 18 + x, 18 + y, 12, 12, 3);
+        c.fill();
+      }
+      c.restore();
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + w - r, y);
+      c.quadraticCurveTo(x + w, y, x + w, y + r);
+      c.lineTo(x + w, y + h - r);
+      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      c.lineTo(x + r, y + h);
+      c.quadraticCurveTo(x, y + h, x, y + h - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+    }
+
+    function varTeal() { return '#1a5f7a'; }
+    function varTealDark() { return '#0c3d3a'; }
+    function varHit() { return '#c45c3e'; }
+    function varRule() { return '#d4cfc4'; }
+    function varInkMuted() { return '#4a5c58'; }
+    function varPaper() { return '#f5f0e8'; }
+    function varPaperAlt() { return '#ebe4d8'; }
+
+    function render(now) {
+      const active = SCENES.find((s) => now >= s.start && now < s.end) || SCENES[SCENES.length - 1];
+      const p = sceneP(now, active.start, active.end);
+      const fade = 500;
+
+      for (const s of SCENES) {
+        let op = 0;
+        if (now >= s.start - fade && now < s.end + fade) {
+          if (now < s.start) op = (now - (s.start - fade)) / fade;
+          else if (now >= s.end) op = 1 - (now - s.end) / fade;
+          else op = 1;
+        }
+        setUiOpacity(s.id, clamp(op, 0, 1));
+      }
+
+      ctx.clearRect(0, 0, 1920, 1080);
+
+      if (active.id === 'open') {
+        ctx.fillStyle = varPaper();
+        ctx.fillRect(0, 0, 1920, 1080);
+      } else if (active.id === 'doctor') {
+        drawDoctorScene(now, p);
+      } else if (active.id === 'cancer') {
+        drawCancerScene(now, p);
+      } else if (active.id === 'dmta') {
+        drawDmtaBg(now, p);
+      } else if (active.id === 'robot') {
+        drawRobotScene(now, p);
+      } else if (active.id === 'plate') {
+        drawPlateScene(now, p);
+      } else {
+        drawCtaScene(now, p);
+      }
+
+      updateSubtitle(now);
+      updateNarration(now);
+      progressFill.style.width = `${(now / DURATION) * 100}%`;
+      timeLabel.textContent = `${fmt(now)} / ${fmt(DURATION)}`;
+    }
+
+    function tick(ts) {
+      if (lastTs == null) lastTs = ts;
+      const dt = ts - lastTs;
+      lastTs = ts;
+      if (playing) {
+        t += dt;
+        if (t >= DURATION) {
+          t = DURATION;
+          playing = false;
+          btnPlay.textContent = '▶ 再生';
+          speechSynthesis.cancel();
+        }
+      }
+      render(t);
+      requestAnimationFrame(tick);
+    }
+
+    function play() {
+      if (t >= DURATION) { t = 0; spoken.clear(); }
+      playing = true;
+      btnPlay.textContent = '⏸ 一時停止';
+    }
+
+    function pause() {
+      playing = false;
+      btnPlay.textContent = '▶ 再生';
+      speechSynthesis.cancel();
+    }
+
+    function restart() {
+      t = 0;
+      spoken.clear();
+      speechSynthesis.cancel();
+      playing = true;
+      btnPlay.textContent = '⏸ 一時停止';
+    }
+
+    btnPlay.addEventListener('click', () => (playing ? pause() : play()));
+    btnRestart.addEventListener('click', restart);
+    btnVoice.addEventListener('click', () => {
+      narrationOn = !narrationOn;
+      btnVoice.textContent = narrationOn ? '🔊 ナレーション ON' : '🔇 ナレーション OFF';
+      btnVoice.classList.toggle('on', narrationOn);
+      if (!narrationOn) speechSynthesis.cancel();
+    });
+
+    btnRecord.addEventListener('click', async () => {
+      if (!stage.captureStream) {
+        alert('Chrome / Edge で開いてください（captureStream 非対応）');
+        return;
+      }
+      restart();
+      document.body.classList.add('recording');
+      btnRecord.disabled = true;
+      const stream = stage.captureStream(30);
+      const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 10_000_000 });
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' }));
+        a.download = `autolab-intro-${Date.now()}.webm`;
+        a.click();
+        document.body.classList.remove('recording');
+        btnRecord.disabled = false;
+        pause();
+      };
+      rec.start();
+      setTimeout(() => { playing = false; rec.stop(); speechSynthesis.cancel(); }, DURATION + 400);
+    });
+
+    window.addEventListener('resize', fitStage);
+    fitStage();
+    requestAnimationFrame(tick);
+    play();
+  </script>
+</body>
+</html>
