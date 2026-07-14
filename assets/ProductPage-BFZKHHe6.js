@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-BtDcipXU.js";import{r as t,t as n}from"./index-DnbjUaL1.js";import{t as r}from"./PageHero-DeQ944fq.js";var i=e();function a(){return(0,i.jsxs)(t,{children:[(0,i.jsx)(r,{kicker:`Autolab Loop`,title:`医師が DMTA を回す実行 OS`,lead:`Design → Make → Test → Analyze を trail でつなぎ、手動 HTS から Physical AI 連携まで段階的に自動化します。`}),(0,i.jsx)(n,{})]})}export{a as default};
