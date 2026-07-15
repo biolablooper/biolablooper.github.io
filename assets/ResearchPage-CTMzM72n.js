@@ -1,1 +1,0 @@
-import{i as e,t}from"./jsx-runtime-BtDcipXU.js";var n=t();function r(){return(0,n.jsx)(e,{to:`/#outcomes`,replace:!0})}export{r as default};
