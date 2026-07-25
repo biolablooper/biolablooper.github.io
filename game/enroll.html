@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>研究データ提供のお願い ― オートラボ・クエスト | Autolab Loop</title>
+<meta name="description" content="オートラボ・クエストでのあなたの研究判断を、匿名で研究支援AIの改善に役立てます。任意・いつでも変更可。" />
+<style>
+  :root{ --ink:#0f1f1c; --ink-muted:#4a5c58; --paper:#f5f0e8; --paper-alt:#ebe4d8;
+    --teal:#1a5f7a; --teal-dark:#0c3d3a; --green:#2d6a4f; --hit:#c45c3e; --rule:#d4cfc4;
+    --serif: Georgia,'Times New Roman','Yu Mincho','Hiragino Mincho ProN',serif;
+    --sans: system-ui,-apple-system,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--sans); color:var(--ink); line-height:1.7; background:
+    radial-gradient(ellipse 70% 45% at 78% 0%, rgba(26,95,122,.10), transparent 70%),
+    linear-gradient(rgba(26,95,122,.035) 1px, transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg, rgba(26,95,122,.035) 1px, transparent 1px) 0 0/48px 48px, var(--paper); }
+  .wrap{ max-width:44rem; margin:0 auto; padding:2.4rem 1.2rem 4rem; }
+  .kick{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); }
+  h1{ font-family:var(--serif); font-size:1.7rem; line-height:1.3; margin:.3rem 0 1rem; color:var(--teal-dark); }
+  .card{ background:#fff; border:1px solid var(--rule); border-radius:14px; box-shadow:0 18px 40px rgba(12,61,58,.07); padding:1.5rem 1.6rem; }
+  h2{ font-family:var(--serif); font-size:1.05rem; color:var(--teal-dark); margin:1.3rem 0 .4rem; }
+  p{ font-size:.92rem; margin:.5rem 0; }
+  ul{ font-size:.9rem; margin:.4rem 0 .4rem 1.1rem; padding:0; }
+  li{ margin:.25rem 0; }
+  .muted{ color:var(--ink-muted); }
+  u{ text-decoration-color:var(--hit); text-underline-offset:2px; }
+  .field{ margin:.7rem 0; }
+  label{ display:block; font-size:.8rem; font-weight:600; margin-bottom:.25rem; }
+  select, input{ width:100%; font-family:var(--sans); font-size:.9rem; padding:.5rem .6rem; border:1px solid var(--rule); border-radius:8px; background:var(--paper); }
+  .row{ display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:1.2rem; }
+  button{ border:0; border-radius:9px; padding:.65rem 1.2rem; font-size:.92rem; font-weight:700; cursor:pointer; }
+  .primary{ background:var(--hit); color:#fff; }
+  .ghost{ background:rgba(26,95,122,.08); color:var(--teal-dark); }
+  a.textlink{ color:var(--teal); font-size:.86rem; text-decoration:none; }
+  a.textlink:hover{ text-decoration:underline; }
+  .status{ font-size:.85rem; margin-top:.9rem; min-height:1.2em; }
+  .foot{ font-size:.72rem; color:var(--ink-muted); margin-top:1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">Autolab Loop 研究データ提供</div>
+  <h1>あなたの研究判断を、研究支援 AI の改善に。</h1>
+  <div class="card">
+    <p>「オートラボ・クエスト」でのあなたの選択（<b>どの状況で、どの手を選んだか</b>）は、
+      実際の研究者の判断として非常に価値があります。ご同意いただけると、これを<u>匿名で</u>記録し、
+      医師・研究者を支える AI（Autolab Loop）の学習・評価に役立てます。</p>
+
+    <h2>記録すること</h2>
+    <ul>
+      <li>各場面で提示された選択肢と、あなたが選んだ手・その時のゲーム内状況（研究費・整合性・エビデンス等）。</li>
+      <li>難易度・テーマ・専門バックグラウンドなどの設定。</li>
+    </ul>
+    <h2>記録しないこと</h2>
+    <ul>
+      <li>氏名・メールなどの個人情報は<b>イベントに一切含めません</b>。</li>
+      <li>下の連絡先は<b>別の同意台帳にのみ</b>保存し、判断データとは分離します（任意）。</li>
+    </ul>
+    <p class="muted">提供は任意です。いつでもゲーム画面右上の 📊 からオン/オフを切り替えられます。</p>
+
+    <h2>任意の情報（研究の文脈把握のため）</h2>
+    <div class="field">
+      <label for="role">立場</label>
+      <select id="role">
+        <option value="">選択しない</option>
+        <option>学部生</option><option>大学院生</option><option>ポスドク</option>
+        <option>教員・PI</option><option>企業研究者</option><option>臨床医</option><option>その他</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="affiliation">所属（任意・分離保存）</label>
+      <input id="affiliation" type="text" placeholder="例：〇〇大学 △△研究室" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="contact">連絡先メール（任意・フォローアップ用のみ・分離保存）</label>
+      <input id="contact" type="email" placeholder="you@example.ac.jp" autocomplete="off" />
+    </div>
+
+    <div class="row">
+      <button class="primary" id="agree">同意して参加する</button>
+      <button class="ghost" id="declineplay">同意せずに遊ぶ</button>
+      <a class="textlink" href="./">まずゲームを見る →</a>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+  <p class="foot">登場する研究室・人物はすべて架空です。データ提供は研究倫理に配慮し、匿名・分離保存で扱います。
+    運用者向け：この画面は収集を有効化した配信でのみ機能します（受け口 <code>/api/telemetry</code>）。</p>
+</div>
+<script>
+  var CONSENT_KEY = "autolab_consent_v1", PID_KEY = "autolab_pid";
+  function setStatus(msg){ document.getElementById("status").textContent = msg; }
+  function go(){ location.href = "./index.html"; }
+
+  document.getElementById("declineplay").addEventListener("click", function(){
+    try{ localStorage.setItem(CONSENT_KEY, "denied"); }catch(e){}
+    go();
+  });
+
+  document.getElementById("agree").addEventListener("click", function(){
+    var body = {
+      role: document.getElementById("role").value || null,
+      affiliation: document.getElementById("affiliation").value.trim() || null,
+      contact: document.getElementById("contact").value.trim() || null
+    };
+    // Consent is recorded locally regardless; enrollment (pid) is best-effort.
+    try{ localStorage.setItem(CONSENT_KEY, "granted"); }catch(e){}
+    setStatus("登録しています…");
+    if(typeof fetch !== "function"){ go(); return; }
+    fetch("/api/telemetry/enroll", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(j && j.pid){ try{ localStorage.setItem(PID_KEY, j.pid); }catch(e){} } setStatus("ありがとうございます。ゲームを開始します…"); setTimeout(go, 500); })
+      .catch(function(){ setStatus("オフラインのため匿名で開始します…"); setTimeout(go, 700); });
+  });
+</script>
+</body>
+</html>

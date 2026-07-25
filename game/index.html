@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>オートラボ・クエスト ― DMTA ループで新薬を見つけろ | Autolab Loop</title>
+<meta name="description" content="バイオ研究者になりきって大学研究室で実験を回し、再現性のある研究成果を出す選択式アドベンチャー。捏造疑惑・研究室の揉め事・ライバル競争・DMTAループを、Autolab Loop の実行OSごと遊べます。セーブ対応。" />
+<meta property="og:title" content="オートラボ・クエスト ― DMTA ループで新薬を見つけろ" />
+<meta property="og:description" content="大学研究室で実験を設計・実行し、同僚の捏造疑惑やライバルとの競争をくぐり抜けて再現性のある成果を出せ。Autolab Loop をゲームで体験。" />
+<meta property="og:type" content="website" />
+<style>
+:root{
+    --ink:#0f1f1c; --ink-muted:#4a5c58; --paper:#f5f0e8; --paper-alt:#ebe4d8;
+    --teal:#1a5f7a; --teal-dark:#0c3d3a; --green:#2d6a4f; --hit:#c45c3e;
+    --rule:#d4cfc4; --warn:#9b2226; --gold:#bc6c25; --violet:#5f3dc4; --sky:#a8dadc;
+    --accent:#1a5f7a;   /* per-theme accent — set on <html> at render time */
+    --serif: Georgia,'Times New Roman','Yu Mincho','Hiragino Mincho ProN',serif;
+    --sans: system-ui,-apple-system,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:var(--sans); color:var(--ink); line-height:1.65; min-height:100vh; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(ellipse 70% 45% at 78% 0%, rgba(26,95,122,.10), transparent 70%),
+      linear-gradient(rgba(26,95,122,.035) 1px, transparent 1px) 0 0/48px 48px,
+      linear-gradient(90deg, rgba(26,95,122,.035) 1px, transparent 1px) 0 0/48px 48px,
+      var(--paper); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 1.1rem 3rem; position:relative; z-index:1; }
+  #ambient{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5; }
+
+  .top{ display:flex; align-items:center; gap:.6rem; padding:1.1rem .2rem .9rem; flex-wrap:wrap; }
+  .brand-mark{ width:30px; height:30px; flex:none; animation:spin 14s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  .brand-txt strong{ font-family:var(--serif); font-size:1.02rem; display:block; line-height:1.1; }
+  .brand-txt span{ font-size:.66rem; letter-spacing:.08em; color:var(--ink-muted); text-transform:uppercase; }
+  .top .spacer{ flex:1; }
+  .savechip{ font-size:.66rem; color:var(--green); border:1px solid rgba(45,106,79,.3); background:rgba(45,106,79,.08);
+    padding:.28rem .6rem; border-radius:999px; display:inline-flex; align-items:center; gap:.3rem; }
+  .savechip .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .savechip.on .dot{ animation:blink 1.4s steps(1) infinite; }
+  .toplink{ font-size:.76rem; color:var(--teal-dark); text-decoration:none; border:1px solid var(--rule);
+    padding:.3rem .65rem; border-radius:999px; background:#fff; cursor:pointer; transition:transform .15s, background .15s; }
+  .toplink:hover{ background:rgba(26,95,122,.07); transform:translateY(-1px); }
+
+  .hud{ display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; margin-bottom:.6rem; }
+  @media (max-width:640px){ .hud{ grid-template-columns:repeat(2,1fr);} }
+  .stat{ background:#fff; border:1px solid var(--rule); border-radius:9px; padding:.6rem .75rem; position:relative; }
+  .stat .k{ font-size:.62rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-muted); }
+  .stat .v{ font-family:var(--serif); font-size:1.28rem; line-height:1.15; margin-top:.1rem; }
+  .stat .v small{ font-size:.7rem; color:var(--ink-muted); font-family:var(--sans); }
+  .bar{ height:4px; border-radius:3px; background:var(--paper-alt); margin-top:.4rem; overflow:hidden; }
+  .bar i{ display:block; height:100%; border-radius:3px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+  .stat--budget .bar i{ background:var(--gold); } .stat--weeks .bar i{ background:var(--teal); }
+  .stat--cred .bar i{ background:var(--green); } .stat--integ .bar i{ background:var(--teal-dark); }
+  .stat.low .v{ color:var(--warn); }
+  .stat.bump{ animation:bump .45s ease; }
+  @keyframes bump{ 0%{ transform:scale(1);} 40%{ transform:scale(1.05); box-shadow:0 0 0 3px rgba(26,95,122,.12);} 100%{ transform:scale(1);} }
+  .delta{ position:absolute; right:.6rem; top:.3rem; font-size:.78rem; font-weight:800; pointer-events:none; animation:floatUp 1.15s ease forwards; }
+  .delta.pos{ color:var(--green); } .delta.neg{ color:var(--warn); }
+  @keyframes floatUp{ 0%{ opacity:0; transform:translateY(6px);} 20%{ opacity:1;} 100%{ opacity:0; transform:translateY(-16px);} }
+
+  .evrow{ display:flex; align-items:center; gap:.7rem; background:var(--teal-dark); color:#fff; border-radius:9px 9px 0 0; padding:.55rem .9rem; }
+  .evrow.solo{ border-radius:9px; margin-bottom:1rem; }
+  .evrow .lab{ font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--sky); flex:none; }
+  .evbar{ flex:1; height:9px; background:rgba(255,255,255,.14); border-radius:6px; overflow:hidden; position:relative; }
+  .evbar i{ display:block; height:100%; background:linear-gradient(90deg,var(--sky),var(--accent)); border-radius:6px; transition:width .6s cubic-bezier(.4,0,.2,1); position:relative; }
+  .evbar i::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent); animation:shimmer 2.4s linear infinite; }
+  @keyframes shimmer{ 0%{ transform:translateX(-100%);} 100%{ transform:translateX(220%);} }
+  .evrow .rnd{ font-size:.72rem; color:rgba(255,255,255,.8); flex:none; }
+  .rivalrow{ display:flex; align-items:center; gap:.7rem; background:#20302d; color:#fff; border-radius:0 0 9px 9px; padding:.45rem .9rem; margin-bottom:1rem; border-top:1px solid rgba(255,255,255,.08); }
+  .rivalrow .lab{ font-size:.66rem; letter-spacing:.04em; color:#e6a; color:#f0a58c; flex:none; }
+  .rivalbar{ flex:1; height:6px; background:rgba(255,255,255,.12); border-radius:6px; overflow:hidden; }
+  .rivalbar i{ display:block; height:100%; background:linear-gradient(90deg,#bc6c25,#c45c3e); border-radius:6px; transition:width .6s ease; }
+  .rivalrow .pct{ font-size:.68rem; color:rgba(255,255,255,.75); flex:none; }
+
+  .grid{ display:grid; grid-template-columns:1fr 300px; gap:1rem; align-items:start; }
+  @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
+  .scene{ background:#fff; border:1px solid var(--rule); border-radius:12px; box-shadow:0 18px 40px rgba(12,61,58,.07);
+    animation:sceneIn .45s cubic-bezier(.2,.7,.3,1); overflow:hidden; }
+  @keyframes sceneIn{ from{opacity:0; transform:translateY(12px) scale(.99);} to{opacity:1; transform:none;} }
+  .scene-body{ padding:1.5rem 1.7rem 1.7rem; }
+  .figure{ position:relative; height:170px; overflow:hidden; border-bottom:3px solid var(--accent); transition:border-color .5s ease;
+    background:radial-gradient(ellipse 120% 90% at 50% 120%, rgba(26,95,122,.10), transparent), linear-gradient(#f7f3ec,#eee7db); }
+  .figure svg{ display:block; }
+  .fig-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .badge{ display:inline-block; font-size:.64rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.28rem .6rem; border-radius:999px; margin-bottom:.9rem; }
+  .badge.design{ background:rgba(26,95,122,.12); color:var(--teal-dark); }
+  .badge.make{ background:rgba(188,108,37,.14); color:var(--gold); }
+  .badge.test{ background:rgba(95,61,196,.12); color:var(--violet); }
+  .badge.analyze{ background:rgba(45,106,79,.14); color:var(--green); }
+  .badge.story{ background:var(--paper-alt); color:var(--ink-muted); }
+  .badge.event{ background:rgba(196,92,62,.14); color:var(--hit); }
+  .scene h2{ font-family:var(--serif); font-size:1.42rem; line-height:1.25; margin:.1rem 0 .8rem; }
+  .scene .body{ font-size:.96rem; }
+  .scene .body p{ margin:.55rem 0; }
+  .scene .body em{ color:var(--teal-dark); font-style:normal; font-weight:600; }
+  .scene .body .fig{ background:var(--paper); border:1px solid var(--rule); border-radius:8px; padding:.7rem .85rem; font-size:.85rem; color:var(--ink-muted); margin:.8rem 0; }
+  .scene .body .fig b{ color:var(--ink); }
+
+  .loop{ display:flex; gap:.65rem; align-items:flex-start; margin:1rem 0 1.15rem; background:rgba(26,95,122,.06);
+    border-left:3px solid var(--teal); border-radius:0 8px 8px 0; padding:.7rem .85rem; }
+  .loop .ava{ width:28px; height:28px; flex:none; border-radius:50%; background:var(--teal-dark); display:flex; align-items:center; justify-content:center; animation:pulseAva 2.4s ease-in-out infinite; }
+  @keyframes pulseAva{ 0%,100%{ box-shadow:0 0 0 0 rgba(26,95,122,.4);} 50%{ box-shadow:0 0 0 6px rgba(26,95,122,0);} }
+  .loop .ava svg{ width:16px; height:16px; }
+  .loop .msg{ font-size:.85rem; color:var(--teal-dark); }
+  .loop .msg b{ display:block; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); margin-bottom:.1rem; }
+  .loop .cursor{ display:inline-block; width:.5em; margin-left:1px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .loop.gate{ background:rgba(155,34,38,.07); border-color:var(--warn); }
+  .loop.gate .ava{ background:var(--warn); } .loop.gate .msg,.loop.gate .msg b{ color:var(--warn); }
+
+  .choices{ display:flex; flex-direction:column; gap:.6rem; margin-top:.4rem; }
+  .choice{ text-align:left; width:100%; background:#fff; border:1px solid var(--rule); border-radius:9px; padding:.8rem .95rem; cursor:pointer;
+    transition:border-color .15s, box-shadow .15s, background .15s, transform .1s; font:inherit; position:relative; animation:choiceIn .4s backwards; }
+  .choice:nth-child(1){ animation-delay:.05s;} .choice:nth-child(2){ animation-delay:.11s;} .choice:nth-child(3){ animation-delay:.17s;} .choice:nth-child(4){ animation-delay:.23s;}
+  @keyframes choiceIn{ from{opacity:0; transform:translateX(-8px);} to{opacity:1; transform:none;} }
+  .choice:hover{ border-color:var(--teal); box-shadow:0 4px 14px rgba(26,95,122,.14); background:rgba(26,95,122,.02); transform:translateX(3px); }
+  .choice:focus-visible{ outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(26,95,122,.28); background:rgba(26,95,122,.03); }
+  .btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(26,95,122,.35); }
+  .choice .ct{ font-size:.94rem; font-weight:600; display:flex; gap:.5rem; align-items:baseline; }
+  .choice .num{ font-family:var(--serif); color:var(--teal); font-size:.9rem; flex:none; }
+  .choice .cd{ font-size:.81rem; color:var(--ink-muted); margin-top:.15rem; }
+  .choice .cost{ margin-top:.4rem; display:flex; flex-wrap:wrap; gap:.3rem; }
+  .tag{ font-size:.67rem; padding:.16rem .45rem; border-radius:5px; background:var(--paper-alt); color:var(--ink-muted); }
+  .tag.pos{ background:rgba(45,106,79,.14); color:var(--green); } .tag.neg{ background:rgba(155,34,38,.10); color:var(--warn); }
+  .tag.cost{ background:rgba(188,108,37,.14); color:var(--gold); } .tag.risk{ background:rgba(95,61,196,.12); color:var(--violet); }
+  .tag.rel{ background:rgba(26,95,122,.12); color:var(--teal-dark); }
+
+  .side{ position:sticky; top:.6rem; }
+  .trail{ background:var(--teal-dark); color:#fff; border-radius:12px; padding:1rem 1rem .4rem; }
+  .trail h3{ font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--sky); margin:.1rem 0 .7rem; display:flex; align-items:center; gap:.4rem; }
+  .trail .list{ max-height:420px; overflow:auto; display:flex; flex-direction:column; gap:.5rem; padding-bottom:.7rem; }
+  @media (max-width:860px){ .trail .list{ max-height:190px; } }
+  .li{ font-size:.75rem; line-height:1.4; color:rgba(255,255,255,.85); border-left:2px solid rgba(255,255,255,.18); padding-left:.55rem; animation:liIn .4s ease backwards; }
+  @keyframes liIn{ from{opacity:0; transform:translateX(6px);} to{opacity:1; transform:none;} }
+  .li .meta{ display:block; font-size:.59rem; color:rgba(255,255,255,.45); letter-spacing:.04em; }
+  .li.gate{ border-color:var(--hit); } .li.estop{ border-color:#ffd166; } .li.money{ border-color:var(--gold); }
+  .li.integ{ border-color:var(--sky); } .li.win{ border-color:var(--green); } .li.drama{ border-color:var(--violet); }
+  .trail .empty{ font-size:.75rem; color:rgba(255,255,255,.45); padding-bottom:.8rem; }
+  .roster{ background:#fff; border:1px solid var(--rule); border-radius:12px; padding:.85rem 1rem; margin-top:.8rem; }
+  .roster h3{ font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-muted); margin:.1rem 0 .6rem; }
+  .rmember{ display:flex; align-items:center; gap:.55rem; margin-bottom:.55rem; } .rmember:last-child{ margin-bottom:0; }
+  .rava{ width:30px; height:30px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.8rem; font-family:var(--serif); }
+  .rinfo{ flex:1; min-width:0; } .rname{ font-size:.8rem; font-weight:600; line-height:1.1; } .rrole{ font-size:.63rem; color:var(--ink-muted); }
+  .rbar{ height:4px; background:var(--paper-alt); border-radius:3px; margin-top:.25rem; overflow:hidden; } .rbar i{ display:block; height:100%; border-radius:3px; transition:width .5s ease; }
+
+  .hero{ text-align:center; padding:1.2rem 1.4rem 2rem; }
+  .hero .kick{ font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--teal); font-weight:700; }
+  .hero h1{ font-family:var(--serif); font-size:clamp(1.9rem,5vw,2.9rem); line-height:1.18; margin:.6rem 0 .5rem; }
+  .hero h1 em{ font-style:italic; color:var(--teal-dark); }
+  .hero .sub{ color:var(--ink-muted); max-width:40rem; margin:0 auto 1.4rem; font-size:1.02rem; }
+  .hero .pills{ display:flex; flex-wrap:wrap; gap:.4rem; justify-content:center; margin:0 auto 1.6rem; max-width:40rem; }
+  .hero .pills span{ font-size:.72rem; font-weight:600; padding:.34rem .72rem; border-radius:999px; background:rgba(26,95,122,.08); color:var(--teal-dark); border:1px solid rgba(26,95,122,.16); animation:pillIn .5s backwards; }
+  @keyframes pillIn{ from{opacity:0; transform:translateY(8px) scale(.9);} to{opacity:1; transform:none;} }
+  .btn{ display:inline-flex; align-items:center; gap:.4rem; justify-content:center; cursor:pointer; font:inherit; font-weight:700; font-size:.95rem; padding:.75rem 1.7rem; border-radius:6px; border:none; text-decoration:none; transition:transform .12s, background .15s, box-shadow .15s; }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn--solid{ background:var(--teal-dark); color:#fff; box-shadow:0 6px 18px rgba(12,61,58,.22); } .btn--solid:hover{ background:#0a302e; }
+  .btn--ghost{ background:transparent; border:1px solid var(--teal-dark); color:var(--teal-dark); } .btn--ghost:hover{ background:rgba(12,61,58,.06); }
+  .btn--big{ font-size:1.05rem; padding:.9rem 2rem; }
+  .btnrow{ display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; margin-top:.4rem; }
+  .hero-stage{ height:230px; position:relative; margin:.4rem auto 1.4rem; max-width:520px; }
+  .howto{ max-width:44rem; margin:1.4rem auto 0; text-align:left; background:#fff; border:1px solid var(--rule); border-radius:12px; padding:1.3rem 1.5rem; }
+  .howto h3{ font-family:var(--serif); font-size:1.05rem; margin:.1rem 0 .7rem; }
+  .howto ul{ margin:0; padding-left:1.1rem; font-size:.9rem; color:var(--ink-muted); } .howto li{ margin:.35rem 0; } .howto li b{ color:var(--ink); }
+  .continue-note{ font-size:.8rem; color:var(--ink-muted); margin-top:.9rem; }
+
+  .ending{ background:#fff; border:1px solid var(--rule); border-radius:14px; overflow:hidden; box-shadow:0 20px 46px rgba(12,61,58,.10); animation:sceneIn .5s ease; }
+  .ending-hero{ height:200px; position:relative; overflow:hidden; }
+  .ending-in{ padding:1.6rem 1.9rem 2rem; text-align:center; }
+  .ending .verdict{ font-size:.76rem; letter-spacing:.14em; text-transform:uppercase; font-weight:700; margin-bottom:.5rem; }
+  .ending h2{ font-family:var(--serif); font-size:1.7rem; margin:.1rem 0 .5rem; }
+  .ending .story{ color:var(--ink-muted); max-width:38rem; margin:0 auto 1.2rem; font-size:.96rem; }
+  .scorecard{ display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; max-width:34rem; margin:0 auto 1.3rem; }
+  @media (max-width:560px){ .scorecard{ grid-template-columns:repeat(2,1fr);} }
+  .scorecard .sc{ background:var(--paper); border:1px solid var(--rule); border-radius:8px; padding:.55rem; }
+  .scorecard .sc .k{ font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); }
+  .scorecard .sc .v{ font-family:var(--serif); font-size:1.15rem; }
+  .cta{ background:var(--teal-dark); color:#fff; border-radius:12px; padding:1.4rem; max-width:40rem; margin:0 auto; }
+  .cta .kick{ font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; color:var(--sky); }
+  .cta h3{ font-family:var(--serif); font-size:1.15rem; margin:.4rem 0 .3rem; color:#fff; }
+  .cta p{ font-size:.88rem; color:rgba(255,255,255,.8); margin:0 0 1rem; }
+  .cta .btn--solid{ background:#fff; color:var(--teal-dark); } .cta .btn--ghost{ border-color:rgba(255,255,255,.5); color:#fff; }
+  .foot{ text-align:center; font-size:.72rem; color:var(--ink-muted); margin-top:2rem; line-height:1.6; } .foot a{ color:var(--teal-dark); }
+  .hidden{ display:none !important; }
+  #confetti{ position:fixed; inset:0; z-index:50; pointer-events:none; }
+  #toast{ position:fixed; bottom:1rem; left:50%; transform:translateX(-50%) translateY(20px); background:var(--teal-dark); color:#fff;
+    padding:.55rem 1rem; border-radius:8px; font-size:.82rem; z-index:60; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* figure animations */
+  .mol.f1{ animation:molFloat 4s ease-in-out infinite; } .mol.f2{ animation:molFloat 5s ease-in-out infinite .6s; } .mol.f3{ animation:molFloat 4.6s ease-in-out infinite 1.1s; }
+  @keyframes molFloat{ 0%,100%{ transform:translateY(0) rotate(0);} 50%{ transform:translateY(-10px) rotate(10deg);} }
+  .bond{ stroke-dasharray:40; stroke-dashoffset:40; animation:draw 1.2s ease forwards; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .doc-line{ stroke-dasharray:120; stroke-dashoffset:120; animation:draw 1s ease forwards; }
+  .doc-line.d2{ animation-delay:.25s; } .doc-line.d3{ animation-delay:.5s; } .doc-line.d4{ animation-delay:.75s; }
+  .well{ transform-origin:center; transform-box:fill-box; animation:wellIn .5s ease backwards; }
+  @keyframes wellIn{ from{ transform:scale(0); opacity:0;} to{ transform:scale(1); opacity:1;} }
+  .well.hit{ animation:wellHit 1.6s ease-in-out infinite; }
+  @keyframes wellHit{ 0%,100%{ filter:drop-shadow(0 0 0 rgba(196,92,62,0)); } 50%{ filter:drop-shadow(0 0 5px rgba(196,92,62,.9)); } }
+  .pipette{ animation:pip 2.6s ease-in-out infinite; }
+  @keyframes pip{ 0%,100%{ transform:translateY(0);} 45%,60%{ transform:translateY(26px);} }
+  .drop{ opacity:0; animation:dropFall 2.6s ease-in-out infinite; }
+  @keyframes dropFall{ 0%,55%{ opacity:0; transform:translateY(0);} 62%{ opacity:1;} 80%{ opacity:1; transform:translateY(30px);} 85%,100%{ opacity:0; } }
+  .arm-j1{ transform-origin:100px 40px; transform-box:view-box; animation:armSwing 3s ease-in-out infinite; }
+  .arm-j2{ transform-origin:100px 78px; transform-box:view-box; animation:armSwing2 3s ease-in-out infinite; }
+  @keyframes armSwing{ 0%,100%{ transform:rotate(-16deg);} 50%{ transform:rotate(14deg);} }
+  @keyframes armSwing2{ 0%,100%{ transform:rotate(10deg);} 50%{ transform:rotate(-20deg);} }
+  .dna-dot,.dna-rung{ animation:dnaPulse 2s ease-in-out infinite; }
+  @keyframes dnaPulse{ 0%,100%{ opacity:.4;} 50%{ opacity:1;} }
+  .shield-body{ animation:shake .5s ease 2; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0);} 20%{ transform:translateX(-5px);} 40%{ transform:translateX(5px);} 60%{ transform:translateX(-4px);} 80%{ transform:translateX(4px);} }
+  .shield-x{ stroke-dasharray:30; stroke-dashoffset:30; animation:draw .5s ease .4s forwards; }
+  .gate-flash{ position:absolute; inset:0; background:var(--warn); opacity:0; animation:redflash 1.2s ease 2; }
+  @keyframes redflash{ 0%{ opacity:0;} 15%{ opacity:.28;} 100%{ opacity:0;} }
+  .estop-btn{ transform-origin:center; transform-box:fill-box; animation:estopPulse 1s ease-in-out infinite; }
+  @keyframes estopPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
+  .estop-ring{ animation:estopRing 1.4s ease-out infinite; transform-origin:center; transform-box:fill-box; }
+  @keyframes estopRing{ 0%{ opacity:.7; transform:scale(.7);} 100%{ opacity:0; transform:scale(1.5);} }
+  .needle{ transform-origin:100px 92px; transform-box:view-box; transition:transform 1.1s cubic-bezier(.3,1.4,.5,1); }
+  .abar{ transform-origin:bottom; transform-box:fill-box; animation:barGrow 1s cubic-bezier(.3,1.2,.4,1) backwards; }
+  @keyframes barGrow{ from{ transform:scaleY(0);} to{ transform:scaleY(1);} }
+  .dose-curve{ stroke-dasharray:300; stroke-dashoffset:300; animation:draw 1.8s ease forwards; }
+  .dose-pt{ animation:wellIn .4s ease backwards; }
+  .clash-a{ animation:clashA 2.4s ease-in-out infinite; } .clash-b{ animation:clashB 2.4s ease-in-out infinite; }
+  @keyframes clashA{ 0%,100%{ transform:translateX(0) rotate(0);} 50%{ transform:translateX(8px) rotate(-4deg);} }
+  @keyframes clashB{ 0%,100%{ transform:translateX(0) rotate(0);} 50%{ transform:translateX(-8px) rotate(4deg);} }
+  .spark{ animation:sparkle .9s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+  @keyframes sparkle{ 0%,100%{ opacity:.3; transform:scale(.8);} 50%{ opacity:1; transform:scale(1.2);} }
+  .shine{ animation:shine 2.4s ease-in-out infinite; } @keyframes shine{ 0%,100%{ opacity:.2;} 50%{ opacity:.9;} }
+  .rise{ animation:rise 3s ease-in-out infinite; } @keyframes rise{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-6px);} }
+  .runner{ animation:runner 2.4s linear infinite; } @keyframes runner{ 0%{ transform:translateX(0);} 100%{ transform:translateX(20px);} }
+  /* Powerpro-style ability card */
+  .card{ background:#fff; border:1px solid var(--rule); border-radius:12px; padding:.9rem 1rem; margin-top:.8rem; }
+  .card h3{ font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-muted); margin:.1rem 0 .7rem; display:flex; align-items:center; gap:.4rem; }
+  .abgrid{ display:grid; grid-template-columns:1fr 1fr; gap:.5rem .6rem; margin-bottom:.7rem; }
+  .abcell{ display:flex; align-items:center; gap:.45rem; }
+  .abcell .an{ font-size:.72rem; color:var(--ink-muted); flex:none; width:3.6em; }
+  .abcell .amini{ flex:1; height:5px; background:var(--paper-alt); border-radius:3px; overflow:hidden; }
+  .abcell .amini i{ display:block; height:100%; border-radius:3px; background:var(--teal); transition:width .5s ease; }
+  .grade{ font-family:var(--serif); font-weight:700; font-size:.92rem; width:1.1em; text-align:center; flex:none; }
+  .grade.g-S{ color:#c45c3e; } .grade.g-A{ color:#2d6a4f; } .grade.g-B{ color:#1a5f7a; } .grade.g-C{ color:#4a5c58; } .grade.g-D,.grade.g-E,.grade.g-F,.grade.g-G{ color:#8a8577; }
+  .meters{ display:flex; gap:.6rem; margin-bottom:.7rem; }
+  .meter{ flex:1; } .meter .ml{ font-size:.62rem; color:var(--ink-muted); display:flex; justify-content:space-between; }
+  .meter .mb{ height:6px; background:var(--paper-alt); border-radius:4px; overflow:hidden; margin-top:.2rem; }
+  .meter .mb i{ display:block; height:100%; border-radius:4px; transition:width .5s ease; }
+  .meter.mot .mb i{ background:linear-gradient(90deg,#ffd166,#c45c3e); } .meter.sta .mb i{ background:linear-gradient(90deg,#a8dadc,#1a5f7a); }
+  .meter.low .mb i{ background:var(--warn) !important; }
+  .skills{ display:flex; flex-wrap:wrap; gap:.3rem; }
+  .skills .empty2{ font-size:.68rem; color:var(--ink-muted); }
+  .skill{ font-size:.66rem; padding:.2rem .5rem; border-radius:999px; background:rgba(196,92,62,.12); color:var(--hit); border:1px solid rgba(196,92,62,.25); font-weight:600; }
+  .rgrow{ height:4px; background:var(--paper-alt); border-radius:3px; margin-top:.25rem; overflow:hidden; } .rgrow i{ display:block; height:100%; border-radius:3px; background:var(--gold); transition:width .5s ease; }
+
+  /* cross-examination (Ace Attorney style) */
+  .cx-bar{ font-size:.72rem; color:var(--ink-muted); margin:.2rem 0 .55rem; }
+  .cx-pen{ letter-spacing:.12em; color:var(--hit); font-size:.8rem; }
+  .cx-testimony{ background:var(--paper-alt); border-left:4px solid var(--violet); border-radius:0 8px 8px 0; padding:.85rem 1.05rem; font-size:1.05rem; font-family:var(--serif); margin:.5rem 0 .3rem; animation:cxIn .35s ease; }
+  @keyframes cxIn{ from{ opacity:0; transform:translateX(-6px);} to{ opacity:1; transform:none;} }
+  .cx-who{ display:block; font-size:.7rem; font-weight:700; letter-spacing:.06em; color:var(--violet); font-family:var(--sans); margin-bottom:.2rem; }
+
+  /* 査定ランク seal on ending screens */
+  .rankseal{ position:absolute; top:.9rem; right:1rem; width:66px; height:66px; border-radius:50%; background:#fff; border:3px solid var(--rc);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.5) inset;
+    animation:sealPop .55s cubic-bezier(.3,1.6,.5,1) .35s backwards; z-index:2; }
+  .rankseal-r{ font-family:var(--serif); font-weight:700; font-size:2rem; line-height:1; color:var(--rc); }
+  .rankseal-l{ font-size:.54rem; letter-spacing:.14em; color:var(--ink-muted); margin-top:.05rem; }
+  @keyframes sealPop{ from{ transform:scale(0) rotate(-25deg); opacity:0;} to{ transform:none; opacity:1;} }
+
+  /* impact screen-shake (gate / E-stop) */
+  #gwrap.shake{ animation:screenShake .42s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes screenShake{ 10%,90%{ transform:translateX(-2px);} 20%,80%{ transform:translateX(4px);} 30%,50%,70%{ transform:translateX(-7px);} 40%,60%{ transform:translateX(7px);} }
+  #muteTop, #dataTop{ text-decoration:none; }
+  .toplink.on{ background:rgba(45,106,79,.14); border-color:var(--green); }
+
+  /* research-data consent (opt-in telemetry) */
+  .consentbar{ position:fixed; left:50%; bottom:1rem; transform:translateX(-50%); z-index:60;
+    width:calc(100% - 2rem); max-width:40rem; background:var(--teal-dark); color:#eaf3f2;
+    border-radius:12px; box-shadow:0 10px 34px rgba(0,0,0,.3); }
+  .consentbar .cb-in{ padding:.85rem 1rem; display:flex; flex-direction:column; gap:.35rem; font-size:.82rem; line-height:1.55; }
+  .consentbar b{ font-family:var(--serif); font-size:.95rem; }
+  .consentbar u{ text-decoration-color:var(--hit); text-underline-offset:2px; }
+  .consentbar .cb-btns{ display:flex; gap:.5rem; margin-top:.35rem; }
+  .consentbar button{ border:0; border-radius:8px; padding:.45rem 1rem; font-size:.82rem; font-weight:600; cursor:pointer; }
+  .consentbar .cb-yes{ background:var(--hit); color:#fff; }
+  .consentbar .cb-no{ background:rgba(255,255,255,.14); color:#eaf3f2; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } #gwrap.shake{ animation:none !important; } }
+</style>
+</head>
+<body>
+<svg id="ambient" aria-hidden="true"></svg>
+<canvas id="confetti" class="hidden"></canvas>
+<div id="toast"></div>
+<div class="wrap" id="gwrap">
+  <div class="top">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="15" fill="none" stroke="#0c3d3a" stroke-width="2"/>
+      <path d="M16 5 a11 11 0 1 1 -7.8 3.2" fill="none" stroke="#1a5f7a" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M8.2 8.2 l-1 4.6 4.6 -1" fill="none" stroke="#c45c3e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="16" r="3.2" fill="#2d6a4f"/>
+    </svg>
+    <div class="brand-txt"><strong>Autolab Loop</strong><span>研究室シミュレーション</span></div>
+    <div class="spacer"></div>
+    <span class="savechip" id="saveChip"><span class="dot"></span>自動保存</span>
+    <a class="toplink" id="dataTop" href="#" title="研究データ提供の設定" aria-label="研究データ提供の設定">📊</a>
+    <a class="toplink" id="muteTop" href="#" title="音のオン/オフ" aria-label="音のオン/オフ">🔊</a>
+    <a class="toplink" id="suspendTop" href="#">中断</a>
+    <a class="toplink" id="restartTop" href="#">最初から</a>
+  </div>
+
+  <div id="hudZone" class="hidden">
+    <div class="hud">
+      <div class="stat stat--budget" id="stBudget"><div class="k">研究費</div><div class="v"><span class="num"></span> <small>万円</small></div><div class="bar"><i></i></div></div>
+      <div class="stat stat--weeks" id="stWeeks"><div class="k">残り期間</div><div class="v"><span class="num"></span> <small>週</small></div><div class="bar"><i></i></div></div>
+      <div class="stat stat--cred" id="stCred"><div class="k">ラボ・学界の評価</div><div class="v"><span class="num"></span></div><div class="bar"><i></i></div></div>
+      <div class="stat stat--integ" id="stInteg"><div class="k">データ整合性</div><div class="v"><span class="num"></span></div><div class="bar"><i></i></div></div>
+    </div>
+    <div class="evrow" id="evRow"><span class="lab">研究進捗 / エビデンス</span><div class="evbar"><i id="evFill"></i></div><span class="rnd" id="evRound">Round 0</span></div>
+    <div class="rivalrow" id="rivalRow"><span class="lab">競合：有馬ラボ</span><div class="rivalbar"><i id="rivalFill"></i></div><span class="pct" id="rivalPct">0%</span></div>
+  </div>
+
+  <div class="grid" id="mainGrid">
+    <div id="stage"></div>
+    <div class="side" id="sideZone">
+      <div class="trail">
+        <h3><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a8dadc" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>監査 trail（ラボ日誌）</h3>
+        <div class="list" id="trailList"><div class="empty">まだ記録はありません。</div></div>
+      </div>
+      <div class="card hidden" id="card"></div>
+      <div class="roster hidden" id="roster"></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    このゲームは <b>Autolab Loop</b>（医師・研究者が wet lab 実測で Design→Make→Test→Analyze を閉じる実行 OS）の紹介作品です。<br>
+    登場する研究室・人物・チームはすべて架空。科学設定は実在のアッセイ手法を参考にした簡略値です。進行は自動保存されます。
+  </div>
+</div>
+
+<script>
+/* Autolab Quest — built from frontend/game/src by build.mjs.
+   DO NOT edit this file by hand; edit the modules and rebuild. */
+/* ---- 10-config.js ---- */
+/* ============================================================
+   オートラボ・クエスト ― Autolab Loop 研究室シミュレーション
+   単一ファイル / 依存なし / 自動セーブ対応
+   （エンジン部・データ部は下段の <script> に続く）
+   ============================================================ */
+
+
+/* ---------- 定数 ---------- */
+const START = { budget: 8000000, weeks: 48, cred: 60, integ: 80 };
+/* ---------- 難易度 ---------- */
+const DIFF = {
+  easy:   { name:"やさしい（研究奨励モード）", tag:"はじめて向け", budget:11000000, weeks:56, winEv:78,  rivalStep:9,  cxBonus:2,  evMult:1.18, startMot:70, startTai:100, verifyN:5,
+    note:"研究費と期間にたっぷり余裕。目標エビデンスは低め、競合はゆっくり、確認回数も多め。まず会社と loop を体験したい人へ。" },
+  normal: { name:"ふつう（標準の助教生活）", tag:"おすすめ", budget:8000000, weeks:46, winEv:100, rivalStep:12, cxBonus:0, evMult:1.0, startMot:60, startTai:100, verifyN:3,
+    note:"設計どおりのバランス。カウンタースクリーンの回数は有限 ―― 全部は確かめられない。どこで使うかが勝負。" },
+  hard:   { name:"むずかしい（テニュアの崖）", tag:"歯ごたえ重視", budget:7200000, weeks:47, winEv:106, rivalStep:15, cxBonus:-1, evMult:0.95, startMot:52, startTai:90, verifyN:2,
+    note:"研究費・期間が厳しく、目標は高い。競合は速く、反対尋問の自信 -1。締切と捏造の誘惑が重くのしかかる。腕自慢へ。" },
+};
+function curDiff(){ return DIFF[state.diff] || DIFF.normal; }
+function winEv(){ return curDiff().winEv; }
+function rivalStep(){ return curDiff().rivalStep; }
+
+/* ---------- Autolab Loop 運用度・教授の評価/解雇 ---------- */
+function loopScore(d){ state.loopUse = clamp((state.loopUse!=null?state.loopUse:62)+d, 0, 100); }
+function warnLimit(){ return state.diff==="easy" ? 3 : 2; }
+function shouldFire(){ return (state.loopUse<=15) || ((state.warnings||0) >= warnLimit()); }
+function reviewDue(){ return (state.round===2 && !state.flags.rev2) || (state.round===4 && !state.flags.rev4); }
+const PRODUCT_URL = "/product";
+const SAVE_KEY = "autolab_quest_save_v3";
+const LS = (function(){ try{ return (typeof localStorage!=="undefined") ? localStorage : null; }catch(e){ return null; } })();
+
+/* ---------- 登場人物 ---------- */
+const CAST = {
+  kirishima:{ name:"霧島 教授", role:"研究室主宰 (PI)", color:"#0c3d3a", ini:"霧" },
+  sakura:{ name:"佐倉 楓", role:"先輩ポスドク", color:"#5f3dc4", ini:"佐" },
+  taku:{ name:"卓也", role:"後輩・修士2年", color:"#bc6c25", ini:"卓" },
+};
+
+/* ---- 20-state.js ---- */
+const state = {};
+function freshState(){
+  return {
+    bg:null, theme:null, round:0, diff:"normal",
+    budget:START.budget, weeks:START.weeks, budget0:START.budget, weeks0:START.weeks, cred:START.cred, integ:START.integ,
+    evidence:0, rivalProgress:0,
+    fabricated:false, corrected:false, confirmed:false, whistleblew:false, complicit:false,
+    auditCleared:false, auditFlagged:false,
+    rel:{ sakura:50 },
+    ab:{ jikken:42, toukei:42, shidou:40, hasshin:42 },   // 能力値（実験力・統計力・指導力・発信力）
+    yaruki:60, tairyoku:100,                               // やる気・体力（サクセス風）
+    students:{
+      taku:{ name:"卓也", role:"M2", grow:22, bond:55, color:"#bc6c25", ini:"卓" },
+      misaki:{ name:"美咲", role:"B4", grow:8, bond:50, color:"#2d6a4f", ini:"美" },
+    },
+    skills:[],
+    cx:null,                                              // 反対尋問（逆転裁判風）の状態
+    loopUse:62, warnings:0,                               // Autolab Loop の使いこなし度・教授の警告回数
+    verifyCredits:3,                                      // カウンタースクリーンの残り回数（難易度で決まる・有限）
+    rd:{}, eventPool:[], flags:{}, log:[], _noiseNext:false, _ended:false,
+  };
+}
+
+/* ---------- 特殊能力（コツ） ---------- */
+const SKILLS = {
+  seimitsu:{ name:"精密ピペット", desc:"分注が安定。QC の Z-factor に加点。" },
+  bunkenou:{ name:"文献王", desc:"出典付き手順が速く堅い。捏造ゲートに強い。" },
+  toukei_me:{ name:"統計の申し子", desc:"解析から得るエビデンスに加点。" },
+  mendoumi:{ name:"面倒見の良さ", desc:"後輩指導で得る評価が増える。" },
+  rinsho:{ name:"臨床の勘", desc:"指導と発信で評価が伸びやすい。" },
+  taryoku_baka:{ name:"体力オバケ", desc:"活動での体力消費が軽い。" },
+  kousho:{ name:"交渉上手", desc:"助成・予算イベントで得が増える。" },
+  fujou_allergy:{ name:"捏造アレルギー", desc:"整合性が 20 未満に落ちない。" },
+};
+
+/* ---------- テーマ ---------- */
+const THEMES = {
+  sglt2:{ name:"SGLT2 阻害薬", disease:"2 型糖尿病", diff:1.0, tag:"入門", accent:"#1a5f7a",
+    assay:"SGLT2 発現細胞のグルコース取り込み阻害（384-well・吸光 450 nm）",
+    refs:"参照骨格：エンパグリフロジン / メトホルミン",
+    brief:"既知の SGLT2 阻害骨格を起点に、選択性（SGLT1 に効かない）と溶解性を改善した次世代候補を探す。よく確立したアッセイで、初めての一周に向く。",
+    steps:["既知骨格で 12 化合物のプライマリ HTS","ヒット周辺のアナログ拡張と SGLT1 選択性","溶解性・ADMET で hit-to-lead 最適化",
+      "代謝安定性（ミクロソーム）と血漿タンパク結合","リードの選択性・活性を再現確認","hERG・細胞毒性で安全域を確認","最終リードの再現性バッチを固める"] },
+  tnf:{ name:"TNF-α 産生阻害", disease:"自己免疫・炎症", diff:1.25, tag:"標準", accent:"#c45c3e",
+    assay:"THP-1 単球を LPS 刺激し、産生 TNF-α を HTRF で定量",
+    refs:"参照：デキサメタゾン（陽性）/ アダリムマブ",
+    brief:"炎症性サイトカイン TNF-α の産生を細胞レベルで抑える低分子を探す。細胞アッセイゆえ毒性（偽陽性）の切り分けが肝。",
+    steps:["参照化合物で HTRF 条件と QC を確立","一次スクリーニングとヒット抽出","用量依存性と細胞毒性カウンターを分離","選択性と代謝安定性で絞り込み",
+      "リードの構造活性相関を詰める","炎症カスケード下流の確認","再現性バッチと選択性を固める"] },
+  tdp1:{ name:"TDP1 阻害", disease:"がん（DNA 修復標的）", diff:1.5, tag:"難関", accent:"#5f3dc4",
+    assay:"TDP1 酵素の ECL（電気化学発光）アッセイ（Anthony 2007 系）",
+    refs:"参照：フラマイジン系既知阻害剤",
+    brief:"DNA 修復酵素 TDP1 を阻害し、がん細胞の薬剤感受性を高める。発光・蛍光干渉による偽陽性が多く、QC と再現確認が特に難しい。",
+    steps:["既知阻害剤で ECL アッセイの QC を確立","一次スクリーニングと発光干渉の除去","用量反応と TDP2 選択性を確認","生化学的機序（結合様式）の裏取り",
+      "細胞レベルの活性確認","選択性パネルで絞り込み","最終リードの再現性を固める"] },
+  glp1:{ name:"GLP-1 受容体アゴニスト", disease:"肥満・2 型糖尿病", diff:1.15, tag:"標準", accent:"#2d6a4f",
+    assay:"GLP-1R 発現細胞の cAMP を TR-FRET（HTRF）で定量（アゴニスト活性）",
+    refs:"参照：セマグルチド / リラグルチド系ペプチド",
+    brief:"GLP-1 受容体を活性化して食欲と血糖を抑える、経口の低分子アゴニストを探す。蛍光ベースの検出ゆえ、化合物自身の自家蛍光による偽陽性の切り分けが肝になる。",
+    steps:["参照アゴニストで cAMP TR-FRET 条件と QC を確立","一次スクリーニングとアゴニスト候補の抽出","自家蛍光・非特異作用のカウンターで偽陽性を分離","用量反応（EC50）と受容体選択性を確認",
+      "経口性・代謝安定性で絞り込み","cAMP 下流（インスリン分泌）で機能確認","最終リードの再現性バッチを固める"] },
+  kinase:{ name:"BCR-ABL キナーゼ阻害", disease:"慢性骨髄性白血病（CML）", diff:1.4, tag:"難関", accent:"#a53860",
+    assay:"BCR-ABL キナーゼ活性を ADP-Glo（発光）で定量（ATP 競合阻害）",
+    refs:"参照：イマチニブ / ダサチニブ",
+    brief:"がん原性キナーゼ BCR-ABL の活性を抑える低分子を探す。レドックス活性化合物（酸化還元サイクリング）が酵素を非特異に潰す偽陽性が紛れ、見かけの阻害に騙されやすい。",
+    steps:["参照阻害剤で ADP-Glo 条件と QC を確立","一次スクリーニングとヒット抽出","レドックス（酸化還元）カウンターで偽陽性を分離","ATP 濃度依存性と結合様式を確認",
+      "キナーゼ選択性パネルで絞り込み","細胞（CML 株）での増殖抑制を確認","最終リードの再現性バッチを固める"] },
+  abx:{ name:"抗菌薬（グラム陰性菌）", disease:"多剤耐性菌感染症", diff:1.3, tag:"難関", accent:"#9c6644",
+    assay:"大腸菌の生育を OD600 で測る最小発育阻止濃度（MIC）アッセイ",
+    refs:"参照：シプロフロキサシン / メロペネム",
+    brief:"新しい作用機序で多剤耐性グラム陰性菌の生育を止める化合物を探す。化合物自体の着色・沈殿が濁度（OD600）を狂わせる光学干渉が、見かけの生育阻害に化ける。",
+    steps:["参照薬で OD600・MIC 条件と QC を確立","一次スクリーニングと生育阻害ヒット抽出","無菌ウェル対照で着色・沈殿（光学干渉）を分離","用量反応（MIC/MBC）と殺菌・静菌の別を確認",
+      "選択性（ヒト細胞毒性）と耐性菌パネルで絞り込み","作用機序（膜/標的）の裏取り","最終リードの再現性バッチを固める"] },
+  gpcr:{ name:"GPCR アンタゴニスト（Gq 型）", disease:"慢性疼痛", diff:1.2, tag:"標準", accent:"#0b7285",
+    assay:"Gq 共役 GPCR の細胞内カルシウム動員を蛍光色素（FLIPR）で測る拮抗アッセイ",
+    refs:"参照：既知アンタゴニスト骨格",
+    brief:"痛みに関わる Gq 共役 GPCR を遮断する経口低分子を探す。着色した化合物が蛍光色素を消光（クエンチ）し、拮抗していないのに“効いて見える”偽陽性が紛れる。",
+    steps:["参照アンタゴニストで Ca フラックス条件と QC を確立","一次スクリーニングと拮抗ヒット抽出","蛍光クエンチング対照（色素のみ）で偽陽性を分離","用量反応（IC50）と受容体選択性を確認",
+      "オフターゲット（他 GPCR）と代謝安定性で絞り込み","鎮痛関連の機能アッセイで確認","最終リードの再現性バッチを固める"] },
+};
+
+/* ---------- バックグラウンド ---------- */
+const BACKGROUNDS = {
+  clinician:{ name:"臨床出身の助教（元・内科医）", role:"クリニシャンサイエンティスト",
+    blurb:"診療現場から転じた助教。臨床課題の嗅覚が鋭く、人を動かすのが上手い。", fx:{ cred:+10, ab:{ hasshin:+10 }, skill:"rinsho" }, note:"評価 +10 / 発信力↑ / コツ「臨床の勘」" },
+  bioinfo:{ name:"計算生物出身の助教", role:"in silico → wet 転向組",
+    blurb:"データ解析に強い助教。統計とゲート運用で失敗を減らし、整合性を保ちやすい。", fx:{ integ:+8, ab:{ toukei:+14 } }, note:"整合性 +8 / 統計力↑↑" },
+  bench:{ name:"実験派の助教（テクニシャン上がり）", role:"手を動かして育った現場派",
+    blurb:"ベンチ一筋で叩き上げた助教。分注は正確、自前の運営費も少し持ち込んでいる。", fx:{ budget:+800000, ab:{ jikken:+14 } }, note:"研究費 +80万 / 実験力↑↑" },
+  chemist:{ name:"創薬化学出身の助教（メディシナルケミスト）", role:"分子設計に強い有機化学者",
+    blurb:"合成と構造活性相関の勘所を押さえた助教。文献の逐語根拠を引くのが速く、出典付き手順に強い。", fx:{ ab:{ jikken:+8, toukei:+6 }, cred:+4, skill:"bunkenou" }, note:"実験力↑・統計力↑ / 評価 +4 / コツ「文献王」" },
+};
+
+/* ---------- 状態操作 ---------- */
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+/* Seedable RNG (mulberry32). All *gameplay* randomness goes through rng() so
+   runs are reproducible and testable; seedRng() sets the stream. Visual-only
+   randomness (confetti) may still use Math.random. */
+let _rngState = 0x9e3779b9 >>> 0;
+function seedRng(n){ _rngState = ((n >>> 0) || 0x9e3779b9) >>> 0; }
+function rng(){ _rngState = (_rngState + 0x6D2B79F5) >>> 0; let t = _rngState; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+function money(d,why){ state.budget += d; if(why) log(`研究費 ${d>=0?'+':''}${Math.round(d/10000)}万（${why}）`, "money"); }
+function weeks(d){ state.weeks += d; }
+function cred(d){ state.cred = clamp(state.cred + d, 0, 100); }
+function integ(d){ const floor = hasSkill("fujou_allergy") ? 20 : 0; state.integ = clamp(state.integ + d, (d<0 && state.integ>floor)?floor:0, 100); }
+function evidence(d){ state.evidence = clamp(state.evidence + d, 0, 300); }
+function rel(who,d){ if(state.rel[who]!=null) state.rel[who] = clamp(state.rel[who]+d,0,100); }
+function bond(id,d){ if(state.students[id]) state.students[id].bond = clamp(state.students[id].bond+d,0,100); }
+function log(text, kind){ state.log.push({ text, kind:kind||"", round:state.round, wk:(state.weeks0||START.weeks)-state.weeks }); }
+
+/* ---------- サクセス風：能力値・やる気・体力・コツ ---------- */
+function motiv(d){ state.yaruki = clamp(state.yaruki+d, 0, 100); }
+function stam(d){ state.tairyoku = clamp(state.tairyoku+d, 0, 100); }
+function motFactor(){ return 0.9 + (state.yaruki/100)*0.25; }                 // 0.90〜1.15
+function staFactor(){ return state.tairyoku < 25 ? 0.75 : 1; }               // 疲労で効率ダウン
+function hasSkill(id){ return !!(state.skills && state.skills.indexOf(id)>=0); }
+function addSkill(id){ if(!state.skills) state.skills=[]; if(hasSkill(id)) return false; state.skills.push(id); log(`特殊能力を習得：${SKILLS[id]?SKILLS[id].name:id}`,"win"); if(typeof toast==="function") toast(`✦ 特殊能力を習得：${SKILLS[id]?SKILLS[id].name:id}`); return true; }
+const AB_LABEL = { jikken:"実験力", toukei:"統計力", shidou:"指導力", hasshin:"発信力" };
+function abilityGain(k,g){ const b=state.ab[k]; const eff=Math.max(1, Math.round(g*motFactor()*staFactor()*(1-state.ab[k]/140)));
+  state.ab[k]=clamp(state.ab[k]+eff,0,100);
+  const gb=grade(b), ga=grade(state.ab[k]);   // grade improved? (S best → earlier in the string)
+  if(ga!==gb && "SABCDEFG".indexOf(ga) < "SABCDEFG".indexOf(gb)){ const label=AB_LABEL[k]||k;
+    log(`能力ランクアップ：${label} ${gb}→${ga}`,"win");
+    if(typeof toast==="function") toast(`▲ ${label} ランクアップ！ ${gb} → ${ga}`);
+    if(typeof sfx==="function") sfx("rankup"); }
+  checkAbilitySkills(k,b,state.ab[k]); return eff; }
+function checkAbilitySkills(k,b,a){ if(b<80&&a>=80){ if(k==="jikken") addSkill("seimitsu"); if(k==="toukei") addSkill("toukei_me"); if(k==="shidou") addSkill("mendoumi"); if(k==="hasshin") addSkill("kousho"); } }
+function spendStamina(base){ stam(-(hasSkill("taryoku_baka")?Math.round(base*0.6):base)); }
+function grade(v){ return v>=90?"S":v>=80?"A":v>=70?"B":v>=60?"C":v>=50?"D":v>=40?"E":v>=30?"F":"G"; }
+
+function applyFxObj(fx){ if(!fx) return; if(fx.budget) money(fx.budget); if(fx.cred) cred(fx.cred); if(fx.integ) integ(fx.integ);
+  if(fx.ab) for(const k in fx.ab){ if(state.ab[k]!=null) state.ab[k]=clamp(state.ab[k]+fx.ab[k],0,100); }
+  if(fx.skill) addSkill(fx.skill); }
+
+
+/* ============================================================
+   セーブ / ロード（自動）
+   ============================================================ */
+
+/* ---- 30-save.js ---- */
+function writeSave(sceneId, snapStr){
+  if(!LS) return;
+  try{ LS.setItem(SAVE_KEY, JSON.stringify({ v:3, scene:sceneId, s:snapStr })); }catch(e){}
+}
+function clearSave(){ if(!LS) return; try{ LS.removeItem(SAVE_KEY); }catch(e){} }
+function readSave(){
+  if(!LS) return null;
+  try{ const raw=LS.getItem(SAVE_KEY); if(!raw) return null; const o=JSON.parse(raw);
+    if(o && o.v===3 && o.s && o.scene) return o; return null; }catch(e){ return null; }
+}
+function hasSave(){ const o=readSave(); if(!o) return null; try{ const st=JSON.parse(o.s); return st && st.theme ? st : null; }catch(e){ return null; } }
+function loadGame(){
+  const o=readSave(); if(!o) return false;
+  try{ Object.assign(state, freshState(), JSON.parse(o.s)); prevHud=null; render(o.scene); return true; }catch(e){ return false; }
+}
+
+/* ============================================================
+   レンダリング
+   ============================================================ */
+
+/* ---- 35-telemetry.js ---- */
+const TELEMETRY = {
+  ver: 1,
+  endpoint: null,                    // null → local buffer only (export via 📊 / autolabExport())
+  consentKey: "autolab_consent_v1",  // "granted" | "denied" | null(unset)
+  bufKey: "autolab_events_v1",
+  max: 2000,                         // ring cap on locally buffered events
+  _sid: null, _seq: 0, _t0: 0, _started: false, _endDone: false,
+};
+try { if (typeof window !== "undefined") window.AUTOLAB_TELEMETRY = TELEMETRY; } catch (e) {}
+// Endpoint resolution (default stays null = local-only). Precedence: an explicit
+// window global wins; otherwise a <meta name="autolab-telemetry-endpoint"> lets the
+// host inject a same-origin ingest URL (e.g. /api/telemetry) without editing JS.
+try { if (typeof window !== "undefined" && window.AUTOLAB_TELEMETRY_ENDPOINT) TELEMETRY.endpoint = String(window.AUTOLAB_TELEMETRY_ENDPOINT); } catch (e) {}
+try { if (TELEMETRY.endpoint == null && typeof document !== "undefined" && document.querySelector) {
+  const m = document.querySelector('meta[name="autolab-telemetry-endpoint"]');
+  const c = m && m.getAttribute && m.getAttribute("content");
+  if (c) TELEMETRY.endpoint = String(c);
+} } catch (e) {}
+
+function telNow(){
+  try{ if(typeof performance!=="undefined" && performance.now) return Math.round(performance.now()); }catch(e){}
+  try{ if(typeof Date!=="undefined" && Date.now) return Date.now(); }catch(e){}
+  return 0;
+}
+function telUuid(){
+  try{ if(typeof crypto!=="undefined" && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  let s=""; try{ s = telNow().toString(36); }catch(e){ s="0"; }
+  for(let i=0;i<10;i++) s += Math.floor(Math.random()*36).toString(36);
+  return "sid_"+s;
+}
+function telText(s){ return String(s==null?"":s).replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim(); }
+
+/* ---- consent ---- */
+function telemetryConsent(){ try{ return LS ? LS.getItem(TELEMETRY.consentKey) : null; }catch(e){ return null; } }
+function telemetryOn(){ return !!LS && telemetryConsent()==="granted"; }
+function setTelemetryConsent(grant){
+  try{ if(LS) LS.setItem(TELEMETRY.consentKey, grant ? "granted" : "denied"); }catch(e){}
+  hideConsentBar(); updateDataBtn();
+  if(grant){ telSessionStart(); if(typeof toast==="function") toast("ご協力ありがとうございます。判断ログを匿名で記録します（📊 でいつでも変更）"); }
+  else if(typeof toast==="function") toast("データ提供はオフです。記録しません。");
+}
+
+/* ---- session ---- */
+function telSession(){ return TELEMETRY._sid || (TELEMETRY._sid = telUuid()); }
+function telNewSession(){ TELEMETRY._sid = telUuid(); TELEMETRY._seq = 0; TELEMETRY._started = false; TELEMETRY._endDone = false; }
+function telSessionStart(){
+  if(TELEMETRY._started || !telemetryOn()) return; TELEMETRY._started = true;
+  let ua=""; try{ ua = (typeof navigator!=="undefined" && navigator.userAgent) ? String(navigator.userAgent).slice(0,120) : ""; }catch(e){}
+  telPush({ v:TELEMETRY.ver, sid:telSession(), seq:TELEMETRY._seq++, ts:telNow(), type:"session_start",
+    diff:state.diff, theme:state.theme, bg:state.bg, ua });
+}
+
+/* ---- buffer + best-effort send ---- */
+function telRead(){ try{ const raw = LS && LS.getItem(TELEMETRY.bufKey); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
+function telWrite(arr){ try{ if(LS) LS.setItem(TELEMETRY.bufKey, JSON.stringify(arr)); }catch(e){} }
+/* Pseudonymous participant id set by the enroll page (enroll.html) after consent.
+   Only this opaque pid rides on events — the pid→identity map lives server-side in
+   a separate consent ledger, so the event stream carries no PII. */
+function telPid(){ try{ return (LS && LS.getItem("autolab_pid")) || null; }catch(e){ return null; } }
+function telPush(ev){
+  if(!telemetryOn()) return;
+  if(ev.pid == null){ const p = telPid(); if(p) ev.pid = p; }
+  const arr = telRead(); arr.push(ev);
+  if(arr.length > TELEMETRY.max) arr.splice(0, arr.length - TELEMETRY.max);
+  telWrite(arr); telSend(ev);
+}
+function telPost(ep, body){
+  try{
+    if(typeof navigator!=="undefined" && navigator.sendBeacon){ navigator.sendBeacon(ep, body); return true; }
+    if(typeof fetch==="function"){ fetch(ep, { method:"POST", headers:{ "Content-Type":"application/json" }, body, keepalive:true }).catch(()=>{}); return true; }
+  }catch(e){}
+  return false;
+}
+function telSend(ev){ const ep = TELEMETRY.endpoint; if(!ep) return; try{ telPost(ep, JSON.stringify(ev)); }catch(e){} }
+/* Best-effort resend of the whole local buffer — catches events captured while an
+   endpoint was unreachable (offline play). The server dedups by (sid, seq), so
+   resending is safe. Called once at boot; also exposed as window.autolabFlush(). */
+function telFlushAll(){ if(!telemetryOn() || !TELEMETRY.endpoint) return 0; const arr = telRead(); if(!arr.length) return 0;
+  try{ telPost(TELEMETRY.endpoint, JSON.stringify(arr)); }catch(e){} return arr.length; }
+try{ if(typeof window!=="undefined") window.autolabFlush = telFlushAll; }catch(e){}
+function telemetryClear(){ try{ if(LS) LS.removeItem(TELEMETRY.bufKey); }catch(e){} }
+function exportTelemetry(){
+  const arr = telRead(); const json = JSON.stringify(arr, null, 2);
+  try{
+    if(typeof document!=="undefined" && document.createElement && typeof URL!=="undefined" && URL.createObjectURL && typeof Blob!=="undefined"){
+      const url = URL.createObjectURL(new Blob([json], { type:"application/json" }));
+      const a = document.createElement("a"); a.href=url; a.download="autolab_quest_events.json"; a.click();
+      setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 1000);
+    }
+  }catch(e){}
+  return arr.length;
+}
+try{ if(typeof window!=="undefined"){ window.autolabExport = exportTelemetry; window.autolabEvents = telRead; } }catch(e){}
+
+/* ---- capture ---- */
+function telSnapshot(){
+  const a = state.ab || {};
+  return { budget:Math.round((state.budget||0)/10000), weeks:state.weeks, cred:state.cred, integ:state.integ,
+    evidence:state.evidence, winEv:(typeof winEv==="function"?winEv():null), rival:Math.round(state.rivalProgress||0),
+    loopUse:state.loopUse, verifyCredits:state.verifyCredits,
+    ab:{ jikken:a.jikken, toukei:a.toukei, shidou:a.shidou, hasshin:a.hasshin } };
+}
+/* Called from pick() AFTER choice.go() mutated state; `before` was snapshotted
+   BEFORE go(), `next` is the returned scene id. Records the chosen option, the
+   full option set (the alternatives are the "rejected" side of a preference
+   pair), the resource deltas the choice caused, and dwell time on the screen. */
+function recordDecision(sceneId, scene, idx, choice, before, next){
+  if(!telemetryOn() || !scene || !scene.choices || !before) return;
+  telSessionStart();
+  const after = telSnapshot(), d = {};
+  ["evidence","integ","loopUse","cred"].forEach(k=>{ const dv=(after[k]-before[k]); if(dv) d[k]=dv; });
+  const db = after.budget-before.budget; if(db) d.budget=db;
+  const dw = after.weeks-before.weeks; if(dw) d.weeks=dw;
+  // Ground-truth label for the Analyze decision: was the top candidate real or an
+  // artifact, and how did the player's read resolve? (feeds the eval harness — see
+  // tools/eval-rubric.mjs / docs/SPEC_ja.md §6.2). Hidden from the player in-game.
+  let truth;
+  try{ if(sceneId==="analyze" && state.rd && state.rd.candidates && state.rd.candidates[0]){
+    truth = { topReal: !!state.rd.candidates[0].real, hitOutcome: state.rd.hitOutcome || null }; } }catch(e){}
+  telPush({ v:TELEMETRY.ver, sid:telSession(), seq:TELEMETRY._seq++, ts:telNow(), type:"decision",
+    scene:sceneId, round:state.round, badge: scene.badge||null,
+    theme:state.theme, bg:state.bg, diff:state.diff,
+    state_before: before,
+    options: scene.choices.map((c,i)=>({ i, t:telText(c.t), tags:(c.cost||[]).map(x=>[x[0], x[1]||""]) })),
+    chosen_index: idx, chosen_text: telText(choice.t), truth,
+    dwell_ms: Math.max(0, telNow() - (TELEMETRY._t0 || telNow())),
+    outcome: { next: next || "round_recap", d } });
+}
+function recordEnding(endId){
+  if(!telemetryOn() || TELEMETRY._endDone) return; TELEMETRY._endDone = true;
+  let rank=null, title=null, score=null;
+  try{ if(typeof assessRank==="function") rank=assessRank(); }catch(e){}
+  try{ if(typeof finalTitle==="function") title=finalTitle(); }catch(e){}
+  try{ if(typeof assessScore==="function") score=assessScore(); }catch(e){}
+  telPush({ v:TELEMETRY.ver, sid:telSession(), seq:TELEMETRY._seq++, ts:telNow(), type:"ending",
+    endId, theme:state.theme, bg:state.bg, diff:state.diff, rank, title, score, state_before: telSnapshot() });
+}
+
+/* ---- consent UI (inert without a real DOM) ---- */
+function showConsentBar(){
+  if(typeof document==="undefined" || !document.getElementById || !document.createElement) return;
+  if(document.getElementById("consentBar")) return;
+  const el = document.createElement("div"); el.id="consentBar"; el.className="consentbar";
+  el.innerHTML = `<div class="cb-in"><b>研究データのご提供のお願い</b>`
+    + `<span>あなたの研究判断（選んだ手・その時の状況）を<u>匿名で</u>記録し、研究支援 AI（Autolab Loop）の改善に役立てます。`
+    + `氏名・連絡先などの個人情報は記録しません。提供は任意で、いつでも上部の 📊 から変更できます。</span>`
+    + `<div class="cb-btns"><button class="cb-yes" id="consentYes">協力する</button>`
+    + `<button class="cb-no" id="consentNo">しない</button></div></div>`;
+  const host = document.getElementById("gwrap") || document.body;
+  if(host && host.appendChild) host.appendChild(el);
+}
+function hideConsentBar(){ try{ const el=document.getElementById && document.getElementById("consentBar"); if(el && el.remove) el.remove(); }catch(e){} }
+function maybeConsent(){ if(!LS) return; if(telemetryConsent()==null) showConsentBar(); }
+function updateDataBtn(){ const b=(typeof document!=="undefined" && document.getElementById) ? document.getElementById("dataTop") : null; if(!b) return;
+  const on = telemetryConsent()==="granted"; b.textContent="📊";
+  b.title = on ? "研究データ提供：オン（クリックで変更）" : "研究データ提供：オフ（クリックで変更）";
+  if(b.classList && b.classList.toggle) b.classList.toggle("on", on); }
+
+/* ---- 40-render.js ---- */
+const stage=document.getElementById("stage"), hudZone=document.getElementById("hudZone"),
+      sideZone=document.getElementById("sideZone"), rosterEl=document.getElementById("roster"),
+      cardEl=document.getElementById("card"),
+      mainGrid=document.getElementById("mainGrid"), rivalRow=document.getElementById("rivalRow"),
+      evRow=document.getElementById("evRow"), toastEl=document.getElementById("toast");
+const hasRAF=(typeof requestAnimationFrame==="function");
+let prevHud=null;
+
+function paintHud(){
+  const cur={ budget:Math.round(state.budget/10000), weeks:state.weeks, cred:state.cred, integ:state.integ };
+  setStat("stBudget", cur.budget, clamp(state.budget/(state.budget0||START.budget)*100,0,100), state.budget<600000, prevHud?prevHud.budget:null, "万");
+  setStat("stWeeks", cur.weeks, clamp(state.weeks/(state.weeks0||START.weeks)*100,0,100), state.weeks<=4, prevHud?prevHud.weeks:null, "");
+  setStat("stCred", cur.cred, cur.cred, state.cred<20, prevHud?prevHud.cred:null, "");
+  setStat("stInteg", cur.integ, cur.integ, state.integ<30, prevHud?prevHud.integ:null, "");
+  document.getElementById("evFill").style.width = clamp(state.evidence/winEv()*100,0,100)+"%";
+  document.getElementById("evRound").textContent = state.round>0 ? ("Round "+state.round) : "着任前";
+  const rp = clamp(state.rivalProgress,0,100);
+  document.getElementById("rivalFill").style.width = rp+"%";
+  document.getElementById("rivalPct").textContent = Math.round(rp)+"%";
+  rivalRow.classList.toggle("hidden", !state.theme);
+  evRow.classList.toggle("solo", !state.theme);
+  prevHud=cur;
+}
+function setStat(id,val,pct,low,prev,unit){
+  const el=document.getElementById(id), numEl=el.querySelector(".num");
+  el.querySelector(".bar i").style.width=clamp(pct,0,100)+"%"; el.classList.toggle("low",!!low);
+  if(prev!=null && prev!==val){ const d=val-prev; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+    floatDelta(el,(d>0?"+":"")+d+unit,d>0); tweenNum(numEl,prev,val); } else numEl.textContent=val;
+}
+function tweenNum(el,from,to){ if(!hasRAF){ el.textContent=to; return; } const dur=520,t0=performance.now();
+  (function fr(t){ const k=clamp((t-t0)/dur,0,1); el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(fr); })(performance.now()); }
+function floatDelta(el,text,pos){ if(typeof document.createElement!=="function") return; const s=document.createElement("span");
+  s.className="delta "+(pos?"pos":"neg"); s.textContent=text; el.appendChild(s); setTimeout(()=>s.remove(),1200); }
+function paintTrail(){ const list=document.getElementById("trailList");
+  if(!state.log.length){ list.innerHTML='<div class="empty">まだ記録はありません。</div>'; return; }
+  list.innerHTML=state.log.map(e=>`<div class="li ${e.kind}"><span class="meta">R${e.round} · 第${Math.max(0,e.wk)}週</span>${esc(e.text)}</div>`).join("");
+  list.scrollTop=list.scrollHeight; }
+function paintRoster(){ if(!state.theme){ rosterEl.classList.add("hidden"); return; } rosterEl.classList.remove("hidden");
+  const relCol=v=>v>=60?"var(--green)":(v<=30?"var(--warn)":"var(--gold)");
+  let html=`<h3>指導する後輩</h3>`;
+  for(const id in state.students){ const s=state.students[id]; const g=Math.round(s.grow);
+    html+=`<div class="rmember"><div class="rava" style="background:${s.color}">${s.ini}</div><div class="rinfo"><div class="rname">${s.name} <span style="font-weight:400;color:var(--ink-muted);font-size:.62rem">${s.role}</span></div><div class="rrole">育成度 ${g}${s.grow>=60?' ・戦力化':''}／なつき ${Math.round(s.bond)}</div><div class="rgrow"><i style="width:${clamp(s.grow,0,100)}%"></i></div></div></div>`; }
+  html+=`<div class="rmember" style="margin-top:.5rem;border-top:1px solid var(--rule);padding-top:.55rem"><div class="rava" style="background:${CAST.sakura.color}">${CAST.sakura.ini}</div><div class="rinfo"><div class="rname">${CAST.sakura.name} <span style="font-weight:400;color:var(--ink-muted);font-size:.62rem">先輩</span></div><div class="rrole">関係 ${state.rel.sakura}</div><div class="rbar"><i style="width:${state.rel.sakura}%;background:${relCol(state.rel.sakura)}"></i></div></div></div>`;
+  rosterEl.innerHTML=html; }
+function paintCard(){ if(!state.theme){ cardEl.classList.add("hidden"); return; } cardEl.classList.remove("hidden");
+  const abs=[["jikken","実験力"],["toukei","統計力"],["shidou","指導力"],["hasshin","発信力"]];
+  const abHtml=abs.map(([k,label])=>{ const v=state.ab[k],g=grade(v);
+    return `<div class="abcell"><span class="an">${label}</span><span class="amini"><i style="width:${v}%"></i></span><span class="grade g-${g}">${g}</span></div>`; }).join("");
+  const skHtml=state.skills.length?state.skills.map(id=>`<span class="skill" title="${SKILLS[id]?esc(SKILLS[id].desc):''}">✦ ${SKILLS[id]?SKILLS[id].name:id}</span>`).join(""):'<span class="empty2">まだなし（能力を磨くと習得）</span>';
+  cardEl.innerHTML=`<h3><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4a5c58" stroke-width="2"><path d="M12 2l2.4 6.9H22l-6 4.5 2.3 7-6.3-4.4L5.7 20l2.3-7-6-4.5h7.6z"/></svg>研究者能力カード（助教）</h3>
+    <div class="abgrid">${abHtml}</div>
+    <div class="meters"><div class="meter mot ${state.yaruki<25?'low':''}"><div class="ml"><span>やる気</span><span>${state.yaruki}</span></div><div class="mb"><i style="width:${state.yaruki}%"></i></div></div>
+      <div class="meter sta ${state.tairyoku<25?'low':''}"><div class="ml"><span>体力</span><span>${state.tairyoku}</span></div><div class="mb"><i style="width:${state.tairyoku}%"></i></div></div></div>
+    <div class="meter ${state.loopUse<30?'low':''}" style="margin-bottom:.6rem"><div class="ml"><span>Autolab Loop 運用度${state.loopUse<30?' ⚠ 教授が見ている':''}</span><span>${state.loopUse}</span></div><div class="mb"><i style="width:${state.loopUse}%;background:${state.loopUse<30?'var(--warn)':(state.loopUse>=65?'linear-gradient(90deg,#a8dadc,#2d6a4f)':'linear-gradient(90deg,#a8dadc,#bc6c25)')}"></i></div></div>
+    <div class="skills">${skHtml}</div>`; }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function render(sceneId){
+  const snapStr = LS ? JSON.stringify(state) : null;   // build 前スナップショット（決定論セーブ）
+  const build=SCENES[sceneId]; if(!build){ console.error("unknown scene",sceneId); return; }
+  const s=build();
+  const de=document.documentElement;                    // per-theme accent tint (guarded for the test DOM stub)
+  if(de && de.style && de.style.setProperty){ const th=state.theme&&THEMES[state.theme]; de.style.setProperty("--accent",(th&&th.accent)||"#1a5f7a"); }
+  TELEMETRY._t0 = telNow();                             // dwell 起点（意思決定ログ・任意/同意時のみ）
+  const showChrome=!s.fullscreen;
+  hudZone.classList.toggle("hidden",!showChrome); sideZone.classList.toggle("hidden",!showChrome);
+  if(s.fullscreen){
+    if(mainGrid) mainGrid.style.gridTemplateColumns="1fr"; stage.innerHTML=s.html;
+    if(s.endId) recordEnding(s.endId);
+    if(sceneId!=="title") clearSave();
+    if(saveChip) saveChip.classList.remove("on");
+  } else {
+    if(mainGrid) mainGrid.style.gridTemplateColumns="";
+    const loopHtml=s.loop?`<div class="loop ${s.loopGate?'gate':''}"><div class="ava">${s.loopGate?gateIcon():loopIcon()}</div><div class="msg"><b>${s.loopGate?'捏造ゲート / 安全系':'ループ（Autolab Loop）'}</b><span class="typed" data-full="${esc(s.loop)}">${esc(s.loop)}</span></div></div>`:"";
+    stage.innerHTML=`<div class="scene">${s.figure?`<div class="figure">${figureHTML(s.figure)}</div>`:""}<div class="scene-body">
+      <span class="badge ${s.badgeClass||'story'}">${s.badge||'研究室'}</span><h2>${s.title}</h2>
+      <div class="body">${s.body||""}</div>${loopHtml}
+      <div class="choices">${s.choices.map((c,i)=>choiceHtml(c,i)).join("")}</div></div></div>`;
+    [...stage.querySelectorAll(".choice")].forEach((btn,i)=>btn.addEventListener("click",()=>pick(s.choices[i],sceneId,i,s)));
+    typewriter();
+    writeSave(sceneId, snapStr);
+    if(saveChip) saveChip.classList.add("on");
+  }
+  paintHud(); paintTrail(); paintRoster(); paintCard();
+  if(s.confetti) burstConfetti();
+  sceneSfx(sceneId); bgmApply(sceneId);
+  if(sceneId==="gate_block" || sceneId==="estop_event") screenShake();
+  if(typeof window!=="undefined" && window.scrollTo) window.scrollTo({top:0,behavior:"smooth"});
+}
+function choiceHtml(c,i){ const cost=(c.cost||[]).map(([t,k])=>`<span class="tag ${k||''}">${esc(t)}</span>`).join("");
+  return `<button class="choice"><span class="ct"><span class="num">${i+1}.</span><span>${c.t}</span></span>${c.d?`<div class="cd">${c.d}</div>`:""}${cost?`<div class="cost">${cost}</div>`:""}</button>`; }
+function pick(choice,sceneId,idx,scene){ sfx("select");
+  const before = telemetryOn() ? telSnapshot() : null;          // go() 前の状態（同意時のみ）
+  const next=choice.go?choice.go():null;
+  if(before) recordDecision(sceneId, scene, idx, choice, before, next);
+  render(next||"round_recap"); }
+function typewriter(){ if(!hasRAF) return; const el=stage.querySelector(".typed"); if(!el) return;
+  const full=el.getAttribute("data-full")||""; el.textContent=""; let i=0;
+  const cur=document.createElement("span"); cur.className="cursor"; cur.textContent="▍"; el.parentNode.appendChild(cur);
+  const iv=setInterval(()=>{ el.textContent=full.slice(0,++i); if(i>=full.length){ clearInterval(iv); cur.remove(); } },16); }
+function loopIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="#a8dadc" stroke-width="2.2"><path d="M12 4a8 8 0 1 1-5.6 2.3" stroke-linecap="round"/><path d="M6 3l.4 3.6L10 6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+function gateIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 3l8 4v5c0 4.5-3.4 7.5-8 9-4.6-1.5-8-4.5-8-9V7z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+const saveChip=document.getElementById("saveChip");
+function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"),1600); }
+
+
+/* ============================================================
+   アニメーション図
+   ============================================================ */
+
+/* ---- 45-audio.js ---- */
+const AUDIO = { ctx:null, master:null, muted:false };
+try { AUDIO.muted = !!(LS && LS.getItem("autolab_muted") === "1"); } catch (e) {}
+
+function audioInit(){
+  if(AUDIO.ctx || typeof window === "undefined") return;
+  try{ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    AUDIO.ctx = new AC(); AUDIO.master = AUDIO.ctx.createGain();
+    AUDIO.master.gain.value = 0.32; AUDIO.master.connect(AUDIO.ctx.destination);
+  }catch(e){ AUDIO.ctx = null; }
+}
+function audioResume(){ try{ if(AUDIO.ctx && AUDIO.ctx.state === "suspended") AUDIO.ctx.resume(); }catch(e){} }
+function setMuted(m){ AUDIO.muted = !!m; try{ if(LS) LS.setItem("autolab_muted", m ? "1" : "0"); }catch(e){} updateMuteBtn();
+  if(m) bgmStop(true); else if(AUDIO.bgmDesired) bgmStart(AUDIO.bgmDesired); }
+function updateMuteBtn(){ const b = document.getElementById("muteTop"); if(b) b.textContent = AUDIO.muted ? "🔇" : "🔊"; }
+
+/* one enveloped oscillator note (optionally pitch-sliding) */
+function tone(freq, dur, type, vol, when, slideTo){
+  if(!AUDIO.ctx || AUDIO.muted) return;
+  const t0 = AUDIO.ctx.currentTime + (when || 0);
+  const o = AUDIO.ctx.createOscillator(), g = AUDIO.ctx.createGain();
+  o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.25, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(AUDIO.master); o.start(t0); o.stop(t0 + dur + 0.03);
+}
+/* short filtered noise burst (alarms/impacts) */
+function noise(dur, vol, when){
+  if(!AUDIO.ctx || AUDIO.muted) return;
+  const t0 = AUDIO.ctx.currentTime + (when || 0);
+  const n = Math.max(1, Math.floor(AUDIO.ctx.sampleRate * dur));
+  const buf = AUDIO.ctx.createBuffer(1, n, AUDIO.ctx.sampleRate), d = buf.getChannelData(0);
+  for(let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = AUDIO.ctx.createBufferSource(); src.buffer = buf;
+  const g = AUDIO.ctx.createGain(); g.gain.value = vol || 0.1;
+  src.connect(g); g.connect(AUDIO.master); src.start(t0); src.stop(t0 + dur);
+}
+function arp(freqs, step, dur, type, vol){ freqs.forEach((f, i) => tone(f, dur, type, vol, i * step)); }
+
+const SFX = {
+  select:    ()=> tone(520, 0.06, "triangle", 0.16),
+  back:      ()=> tone(300, 0.05, "sine", 0.12),
+  good:      ()=> { tone(660, 0.08, "triangle", 0.2); tone(880, 0.13, "triangle", 0.2, 0.08); },
+  hit:       ()=> arp([523, 659, 784], 0.09, 0.15, "triangle", 0.22),        // false-positive caught / read-win
+  bad:       ()=> tone(200, 0.22, "sawtooth", 0.22, 0, 120),                 // burned by an artifact
+  coin:      ()=> { tone(988, 0.05, "square", 0.16); tone(1319, 0.1, "square", 0.16, 0.05); },
+  gate:      ()=> { tone(160, 0.26, "square", 0.28, 0, 90); noise(0.14, 0.09); },  // fabrication gate
+  estop:     ()=> { tone(300, 0.1, "square", 0.24); tone(300, 0.1, "square", 0.24, 0.15); tone(300, 0.1, "square", 0.24, 0.3); },
+  objection: ()=> { tone(720, 0.06, "square", 0.26); tone(520, 0.15, "square", 0.26, 0.06, 300); },  // 異議あり！
+  break:     ()=> arp([440, 587, 880], 0.08, 0.18, "triangle", 0.24),        // testimony broken
+  wrong:     ()=> tone(180, 0.18, "sawtooth", 0.2, 0, 120),
+  win:       ()=> arp([523, 659, 784, 1047], 0.12, 0.2, "triangle", 0.24),   // victory jingle
+  lose:      ()=> arp([392, 330, 262], 0.16, 0.26, "sine", 0.22),
+  rankup:    ()=> arp([659, 880, 1109, 1319], 0.06, 0.16, "triangle", 0.2),   // ability grade up ▲
+};
+function sfx(name){ if(AUDIO.muted) return; audioInit(); audioResume(); const f = SFX[name]; if(f) try{ f(); }catch(e){} }
+
+/* map a rendered scene to its audio cue */
+function sceneSfx(id){
+  if(AUDIO.muted) return;
+  if(id === "cross"){ const cx = state.cx; if(!cx) return;
+    if(cx.fb) sfx(cx.fbGood ? "break" : "wrong"); else if(cx.view === "e") sfx("objection"); return; }
+  if(id === "analyze_result"){ const o = state.rd.hitOutcome;
+    sfx((o === "verify_real" || o === "verify_caught" || o === "trust_win") ? "hit" : "bad"); return; }
+  const M = { gate_block:"gate", estop_event:"estop", student_milestone:"coin",
+    scoop_defended:"good", collab_win:"good", suspicion_report:"good",
+    end_best:"win", end_ok:"good", end_retract:"lose", end_fired:"lose", end_timeout:"lose", end_broke:"lose" };
+  if(M[id]) sfx(M[id]);
+}
+
+/* ---- ambient BGM: a low-load, continuous drone with a slow breathing LFO ----
+   Three moods swap the chord (calm play / tense cross-exam / grim setback).
+   Near-zero CPU (a handful of sustained oscillators). Silent on the title and
+   endings. Guarded: no-op without an AudioContext. */
+AUDIO.bgm = { nodes:[], gain:null, mood:null };
+AUDIO.bgmDesired = null;
+const BGM_CHORD = {
+  calm:  [146.83, 220.00, 293.66],  // D3 A3 D4 — open, unhurried
+  tense: [130.81, 155.56, 233.08],  // C3 Eb3 Bb3 — minor unease (cross-exam)
+  grim:  [110.00, 130.81, 164.81],  // A2 C3 E3 — low minor (gate / E-stop)
+};
+function bgmStart(mood){
+  audioInit(); if(!AUDIO.ctx || AUDIO.muted) return;
+  if(AUDIO.bgm.mood === mood && AUDIO.bgm.nodes.length) return;
+  bgmStop(true);
+  const t = AUDIO.ctx.currentTime, g = AUDIO.ctx.createGain(); g.gain.value = 0; g.connect(AUDIO.master);
+  const lfo = AUDIO.ctx.createOscillator(), lfoGain = AUDIO.ctx.createGain();
+  lfo.frequency.value = 0.06; lfoGain.gain.value = 0.03; lfo.connect(lfoGain); lfoGain.connect(g.gain); lfo.start();
+  const nodes = [lfo];
+  (BGM_CHORD[mood] || BGM_CHORD.calm).forEach((f, i) => {
+    const o = AUDIO.ctx.createOscillator(), og = AUDIO.ctx.createGain();
+    o.type = i === 0 ? "sine" : "triangle"; o.frequency.value = f; og.gain.value = i === 0 ? 0.1 : 0.05;
+    o.connect(og); og.connect(g); o.start(); nodes.push(o);
+  });
+  g.gain.linearRampToValueAtTime(0.12, t + 2);   // gentle fade-in
+  AUDIO.bgm = { nodes, gain:g, mood };
+}
+function bgmStop(now){
+  const b = AUDIO.bgm;
+  if(!b || !b.gain || !AUDIO.ctx){ AUDIO.bgm = { nodes:[], gain:null, mood:null }; return; }
+  try{ const t = AUDIO.ctx.currentTime;
+    if(now){ b.gain.gain.cancelScheduledValues(t); b.gain.gain.setValueAtTime(0, t); }
+    else { b.gain.gain.cancelScheduledValues(t); b.gain.gain.linearRampToValueAtTime(0, t + 1.2); }
+    const stopAt = t + (now ? 0.03 : 1.3);
+    b.nodes.forEach(n => { try{ n.stop(stopAt); }catch(e){} });
+  }catch(e){}
+  AUDIO.bgm = { nodes:[], gain:null, mood:null };
+}
+function bgmFor(sceneId){
+  if(!sceneId || sceneId === "title") return null;
+  if(sceneId.indexOf("end_") === 0) return null;       // endings: jingle then silence
+  if(sceneId === "cross") return "tense";
+  if(sceneId === "gate_block" || sceneId === "estop_event") return "grim";
+  return "calm";
+}
+function bgmApply(sceneId){
+  if(typeof window === "undefined") return;
+  const mood = bgmFor(sceneId); AUDIO.bgmDesired = mood;
+  if(AUDIO.muted) return;
+  if(!mood) bgmStop(); else bgmStart(mood);
+}
+
+/* brief screen shake for impact moments (no-op without a DOM) */
+function screenShake(){ const w = document.getElementById("gwrap"); if(!w || !w.classList) return;
+  w.classList.remove("shake"); void (w.offsetWidth); w.classList.add("shake");
+  setTimeout(()=>{ try{ w.classList.remove("shake"); }catch(e){} }, 450); }
+
+/* ---- 50-figures.js ---- */
+function figureHTML(kind){ const f={ hero:figHero,lab:figLab,dna:figDNA,loop:figLoop,design:figDesign,make:()=>figPlate(false),
+  test:()=>figPlate(true),estop:figEstop,gauge:()=>figGauge(state.rd.z!=null?state.rd.z:0.5),bars:figBars,gate:figGate,drama:figDrama,dose:figDose,paper:figPaper,rival:figRival }[kind]; return (f||figLoop)(); }
+function wellsGrid(cols,rows,hitSet,w,h,ox,oy){ const gx=w/cols,gy=h/rows; let out="",n=0;
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cx=ox+gx*c+gx/2, cy=oy+gy*r+gy/2, isHit=hitSet.has(n);
+    out+=`<circle class="well ${isHit?'hit':''}" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(Math.min(gx,gy)/2.6).toFixed(1)}" fill="${isHit?'#c45c3e':'rgba(26,95,122,.28)'}" style="animation-delay:${(n*0.02).toFixed(2)}s"/>`; n++; }
+  return out; }
+function figHero(){ const hits=new Set([13,27,34]);
+  return `<svg viewBox="0 0 520 230" width="100%" height="100%"><defs><radialGradient id="g1" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#1a5f7a" stop-opacity=".15"/><stop offset="100%" stop-color="#1a5f7a" stop-opacity="0"/></radialGradient></defs>
+    <rect width="520" height="230" fill="url(#g1)"/>
+    <g transform="translate(120,115)"><circle r="72" fill="none" stroke="#d4cfc4" stroke-width="10"/>
+      <circle r="72" fill="none" stroke="#1a5f7a" stroke-width="10" stroke-linecap="round" stroke-dasharray="90 360" transform="rotate(-90)"><animateTransform attributeName="transform" type="rotate" from="-90" to="270" dur="4s" repeatCount="indefinite"/></circle>
+      <circle cx="0" cy="-72" r="8" fill="#c45c3e"><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/></circle>
+      <text y="-6" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#0c3d3a" font-weight="700">DMTA</text>
+      <text y="14" text-anchor="middle" font-size="9" fill="#4a5c58">Design·Make·Test·Analyze</text></g>
+    <g transform="translate(250,70)"><rect x="-8" y="-8" width="256" height="106" rx="8" fill="#fff" stroke="#d4cfc4"/>${wellsGrid(10,5,hits,240,90,0,0)}</g>
+    <g class="mol f1" transform="translate(430,60)"><line class="bond" x1="0" y1="0" x2="20" y2="12" stroke="#2d6a4f" stroke-width="2.5"/><line class="bond" x1="20" y1="12" x2="40" y2="0" stroke="#2d6a4f" stroke-width="2.5"/><circle r="6" fill="#1a5f7a"/><circle cx="20" cy="12" r="6" fill="#2d6a4f"/><circle cx="40" cy="0" r="6" fill="#c45c3e"/></g></svg>`; }
+function figTitle(){ const hits=new Set([8,20,41]);
+  return `<svg viewBox="0 0 520 230" width="100%" height="100%" role="img" aria-label="DMTA ループと自動ラボのイラスト">
+    <defs><radialGradient id="tg" cx="28%" cy="34%" r="78%"><stop offset="0%" stop-color="#1a5f7a" stop-opacity=".17"/><stop offset="100%" stop-color="#1a5f7a" stop-opacity="0"/></radialGradient></defs>
+    <rect width="520" height="230" fill="url(#tg)"/>
+    <g transform="translate(120,116)">
+      <circle r="78" fill="none" stroke="#e2ddd0" stroke-width="12"/>
+      <circle r="78" fill="none" stroke="#1a5f7a" stroke-width="12" stroke-linecap="round" stroke-dasharray="72 420" transform="rotate(-90)"><animateTransform attributeName="transform" type="rotate" from="-90" to="270" dur="5s" repeatCount="indefinite"/></circle>
+      ${["D","M","T","A"].map((l,i)=>{const a=(-90+i*90)*Math.PI/180,x=Math.cos(a)*78,y=Math.sin(a)*78,col=["#1a5f7a","#bc6c25","#5f3dc4","#2d6a4f"][i];return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="15" fill="${col}"/><text x="${x.toFixed(0)}" y="${(y+5).toFixed(0)}" text-anchor="middle" font-size="15" fill="#fff" font-weight="800">${l}</text>`;}).join("")}
+      <g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite"/><g transform="translate(0,-78)"><circle r="6" fill="#c45c3e" stroke="#fff" stroke-width="1.5"/></g></g>
+      <text y="-3" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#0c3d3a" font-weight="700">DMTA</text>
+      <text y="15" text-anchor="middle" font-size="8.5" fill="#4a5c58">Lab-in-the-Loop</text></g>
+    <path d="M206 116 h24" stroke="#c9c2b4" stroke-width="2" stroke-dasharray="3 3"/><path d="M232 116 l-7 -4 v8 z" fill="#c9c2b4"/>
+    <g transform="translate(250,52)">
+      <rect x="90" y="2" width="7" height="30" rx="3" fill="#0c3d3a"/>
+      <g class="arm-j1"><rect x="90" y="28" width="7" height="36" rx="3" fill="#1a5f7a"/><g class="arm-j2"><rect x="90" y="60" width="7" height="26" rx="3" fill="#1a5f7a"/><rect x="85" y="84" width="17" height="12" rx="3" fill="#0c3d3a"/></g></g>
+      <rect x="-6" y="74" width="212" height="80" rx="7" fill="#fff" stroke="#d4cfc4"/>${wellsGrid(12,5,hits,196,66,0,78)}</g>
+    <g transform="translate(392,150)">
+      <rect width="112" height="66" rx="7" fill="#fff" stroke="#d4cfc4"/>
+      <line x1="12" y1="52" x2="100" y2="52" stroke="#d4cfc4" stroke-width="1.5"/><line x1="12" y1="12" x2="12" y2="52" stroke="#d4cfc4" stroke-width="1.5"/>
+      <path class="dose-curve" d="M16 20 C46 21 54 26 66 38 C78 50 90 51 98 51" fill="none" stroke="#1a5f7a" stroke-width="2.5"/>
+      <text x="56" y="63" text-anchor="middle" font-size="7" fill="#4a5c58">IC50 用量反応</text></g>
+    <g class="mol f2" transform="translate(468,42)"><line class="bond" x1="0" y1="0" x2="16" y2="10" stroke="#2d6a4f" stroke-width="2.5"/><circle r="5" fill="#5f3dc4"/><circle cx="16" cy="10" r="5" fill="#2d6a4f"/></g>
+    <g class="mol f3" transform="translate(214,40)"><circle r="5" fill="#bc6c25"/></g>
+  </svg>`; }
+function figLab(){ return `<svg viewBox="0 0 520 170" width="100%" height="100%"><rect x="0" y="132" width="520" height="8" fill="#d4cfc4"/>
+    <g stroke="#c9c2b4" stroke-width="3"><line x1="30" y1="30" x2="180" y2="30"/><line x1="30" y1="64" x2="180" y2="64"/></g>
+    <g><rect x="40" y="12" width="10" height="18" fill="#1a5f7a"/><rect x="58" y="10" width="10" height="20" fill="#2d6a4f"/><rect x="76" y="14" width="10" height="16" fill="#bc6c25"/><rect x="98" y="46" width="10" height="18" fill="#5f3dc4"/><rect x="120" y="44" width="10" height="20" fill="#c45c3e"/></g>
+    <g transform="translate(250,70)"><path d="M-16 0 h32 l14 52 a30 30 0 0 1 -60 0 z" fill="rgba(45,106,79,.25)" stroke="#2d6a4f" stroke-width="2.5"/><rect x="-8" y="-16" width="16" height="18" fill="none" stroke="#2d6a4f" stroke-width="2.5"/>
+      <circle cx="-6" cy="60" r="3" fill="#2d6a4f"><animate attributeName="cy" from="70" to="30" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" from="1" to="0" dur="1.6s" repeatCount="indefinite"/></circle>
+      <circle cx="8" cy="60" r="2.4" fill="#2d6a4f"><animate attributeName="cy" from="72" to="34" dur="2s" begin=".5s" repeatCount="indefinite"/><animate attributeName="opacity" from="1" to="0" dur="2s" begin=".5s" repeatCount="indefinite"/></circle></g>
+    <g transform="translate(400,66)" fill="#0c3d3a"><rect x="-4" y="0" width="8" height="54" rx="3"/><rect x="-24" y="54" width="48" height="8" rx="4"/><rect x="-2" y="-16" width="20" height="10" rx="4" transform="rotate(20)"/><circle cx="0" cy="-2" r="6" fill="none" stroke="#0c3d3a" stroke-width="3"/></g></svg>`; }
+function figDNA(){ let r="";
+  for(let i=0;i<12;i++){ const y=14+i*12, ph=i*0.5, x1=200+Math.sin(ph)*46, x2=200-Math.sin(ph)*46, front=Math.cos(ph)>=0;
+    r+=`<line class="dna-rung" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${front?'#1a5f7a':'#a8dadc'}" stroke-width="2.5" style="animation-delay:${(i*0.1).toFixed(2)}s"/>`;
+    r+=`<circle class="dna-dot" cx="${x1}" cy="${y}" r="4" fill="#2d6a4f" style="animation-delay:${(i*0.1).toFixed(2)}s"/><circle class="dna-dot" cx="${x2}" cy="${y}" r="4" fill="#c45c3e" style="animation-delay:${(i*0.1+0.3).toFixed(2)}s"/>`; }
+  return `<svg viewBox="0 0 400 170" width="100%" height="100%">${r}</svg>`; }
+function figLoop(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><g transform="translate(200,88)"><circle r="56" fill="none" stroke="#d4cfc4" stroke-width="8"/>
+    <circle r="56" fill="none" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round" stroke-dasharray="70 300" transform="rotate(-90)"><animateTransform attributeName="transform" type="rotate" from="-90" to="270" dur="3.5s" repeatCount="indefinite"/></circle>
+    ${["D","M","T","A"].map((l,i)=>{const a=(-90+i*90)*Math.PI/180,x=Math.cos(a)*56,y=Math.sin(a)*56,col=["#1a5f7a","#bc6c25","#5f3dc4","#2d6a4f"][i];return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="12" fill="${col}"/><text x="${x.toFixed(0)}" y="${(y+4).toFixed(0)}" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">${l}</text>`;}).join("")}</g></svg>`; }
+function figDesign(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><g transform="translate(60,34)"><rect width="120" height="104" rx="6" fill="#fff" stroke="#d4cfc4"/>
+    <line class="doc-line" x1="16" y1="24" x2="104" y2="24" stroke="#1a5f7a" stroke-width="3"/><line class="doc-line d2" x1="16" y1="44" x2="88" y2="44" stroke="#4a5c58" stroke-width="2.5"/><line class="doc-line d3" x1="16" y1="62" x2="100" y2="62" stroke="#4a5c58" stroke-width="2.5"/><line class="doc-line d4" x1="16" y1="80" x2="76" y2="80" stroke="#2d6a4f" stroke-width="2.5"/>
+    <circle cx="104" cy="80" r="9" fill="#2d6a4f"/><path d="M100 80 l3 3 5 -6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g class="mol f1" transform="translate(250,50)"><line class="bond" x1="0" y1="0" x2="22" y2="14" stroke="#2d6a4f" stroke-width="3"/><circle r="8" fill="#1a5f7a"/><circle cx="22" cy="14" r="8" fill="#c45c3e"/></g>
+    <g class="mol f2" transform="translate(300,96)"><line class="bond" x1="0" y1="0" x2="20" y2="-12" stroke="#2d6a4f" stroke-width="3"/><line class="bond" x1="20" y1="-12" x2="40" y2="0" stroke="#2d6a4f" stroke-width="3"/><circle r="8" fill="#5f3dc4"/><circle cx="20" cy="-12" r="8" fill="#2d6a4f"/><circle cx="40" cy="0" r="8" fill="#1a5f7a"/></g>
+    <g class="mol f3" transform="translate(250,120)"><circle r="7" fill="#bc6c25"/></g></svg>`; }
+function figPlate(withRobot){ const hits=new Set([8,20,41,55]);
+  const robot=withRobot?`<g><rect x="96" y="8" width="8" height="34" rx="3" fill="#0c3d3a"/><g class="arm-j1"><rect x="96" y="38" width="8" height="42" rx="3" fill="#1a5f7a"/><g class="arm-j2"><rect x="96" y="76" width="8" height="30" rx="3" fill="#1a5f7a"/><rect x="90" y="104" width="20" height="14" rx="3" fill="#0c3d3a"/></g></g></g>`
+    :`<g class="pipette" transform="translate(150,6)"><rect x="-5" y="0" width="10" height="40" rx="3" fill="#0c3d3a"/><path d="M-5 40 h10 l-3 12 h-4 z" fill="#1a5f7a"/><circle class="drop" cx="0" cy="56" r="4" fill="#2d6a4f"/></g>`;
+  return `<svg viewBox="0 0 300 170" width="100%" height="100%">${robot}<g transform="translate(24,70)"><rect x="-10" y="-10" width="272" height="96" rx="8" fill="#fff" stroke="#d4cfc4"/>${wellsGrid(12,6,hits,252,76,0,0)}</g></svg>`; }
+function figEstop(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><defs><pattern id="hz" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="20" height="20" fill="#9b2226"/><rect width="10" height="20" fill="#ffd166"/></pattern></defs>
+    <rect x="0" y="0" width="400" height="24" fill="url(#hz)" opacity=".85"><animate attributeName="x" from="-20" to="0" dur="1s" repeatCount="indefinite"/></rect>
+    <rect x="0" y="146" width="400" height="24" fill="url(#hz)" opacity=".85"><animate attributeName="x" from="0" to="-20" dur="1s" repeatCount="indefinite"/></rect>
+    <g transform="translate(200,86)"><circle class="estop-ring" r="46" fill="none" stroke="#c45c3e" stroke-width="4"/><circle r="44" fill="#7a1618"/><circle class="estop-btn" r="34" fill="#c92a2a" stroke="#fff" stroke-width="3"/><text y="6" text-anchor="middle" font-size="15" fill="#fff" font-weight="800">STOP</text></g>
+    <text x="200" y="150" text-anchor="middle" font-size="10" fill="#9b2226" font-weight="700">E-STOP LATCHED</text></svg>`; }
+function figGauge(z){ const ang=-90+clamp(z,0,1)*180, pass=z>=0.5;
+  return `<svg viewBox="0 0 200 130" width="100%" height="100%"><path d="M20 92 A80 80 0 0 1 180 92" fill="none" stroke="#e2ddd0" stroke-width="14" stroke-linecap="round"/>
+    <path d="M20 92 A80 80 0 0 1 100 12" fill="none" stroke="#9b2226" stroke-width="14" stroke-linecap="round" opacity=".55"/><path d="M100 12 A80 80 0 0 1 180 92" fill="none" stroke="#2d6a4f" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+    <line x1="100" y1="12" x2="100" y2="30" stroke="#0c3d3a" stroke-width="2" stroke-dasharray="2 3"/><text x="100" y="8" text-anchor="middle" font-size="8" fill="#4a5c58">0.5</text>
+    <g class="needle" style="transform:rotate(${ang.toFixed(1)}deg)"><line x1="100" y1="92" x2="100" y2="26" stroke="${pass?'#2d6a4f':'#9b2226'}" stroke-width="4" stroke-linecap="round"/></g><circle cx="100" cy="92" r="7" fill="#0c3d3a"/>
+    <text x="100" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="${pass?'#2d6a4f':'#9b2226'}" font-weight="700">Z = ${z.toFixed(2)}</text></svg>`; }
+function figBars(){ const vals=[80,58,30,12], cols=["#2d6a4f","#2d6a4f","#bc6c25","#d4cfc4"];
+  const bars=vals.map((v,i)=>`<rect class="abar" x="${40+i*70}" y="${120-v}" width="42" height="${v}" rx="4" fill="${cols[i]}" style="animation-delay:${(i*0.12).toFixed(2)}s"/>${i<2?`<circle cx="${61+i*70}" cy="${112-v}" r="5" fill="#c45c3e"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" repeatCount="indefinite"/></circle>`:""}`).join("");
+  return `<svg viewBox="0 0 340 140" width="100%" height="100%"><line x1="30" y1="120" x2="320" y2="120" stroke="#d4cfc4" stroke-width="2"/>${bars}<text x="180" y="136" text-anchor="middle" font-size="9" fill="#4a5c58">compound ヒットランキング（FDR 適用）</text></svg>`; }
+function figGate(){ return `<div style="position:absolute; inset:0;"><div class="gate-flash"></div><div class="fig-center"><svg width="120" height="120" viewBox="0 0 120 120"><g class="shield-body"><path d="M60 12 l40 18 v26 c0 26-18 40-40 48 -22-8-40-22-40-48 V30 z" fill="#9b2226" opacity=".16" stroke="#9b2226" stroke-width="3" stroke-linejoin="round"/><line class="shield-x" x1="44" y1="48" x2="76" y2="80" stroke="#9b2226" stroke-width="5" stroke-linecap="round"/><line class="shield-x" x1="76" y1="48" x2="44" y2="80" stroke="#9b2226" stroke-width="5" stroke-linecap="round"/></g></svg></div></div>`; }
+function figDrama(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><g class="clash-a" transform="translate(120,86)"><circle r="34" fill="#5f3dc4"/><text y="8" text-anchor="middle" font-family="Georgia,serif" font-size="26" fill="#fff">佐</text></g>
+    <g class="clash-b" transform="translate(280,86)"><circle r="34" fill="#1a5f7a"/><text y="8" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">YOU</text></g>
+    <g transform="translate(200,86)" fill="#c45c3e"><path class="spark" d="M0 -22 L6 -6 L22 0 L6 6 L0 22 L-6 6 L-22 0 L-6 -6 Z"/><path class="spark" d="M0 -12 L3 -3 L12 0 L3 3 L0 12 L-3 3 L-12 0 L-3 -3 Z" style="animation-delay:.3s" fill="#ffd166"/></g></svg>`; }
+function figDose(){ return `<svg viewBox="0 0 340 150" width="100%" height="100%"><line x1="34" y1="120" x2="320" y2="120" stroke="#d4cfc4" stroke-width="2"/><line x1="34" y1="14" x2="34" y2="120" stroke="#d4cfc4" stroke-width="2"/>
+    <path class="dose-curve" d="M40 30 C120 32 150 40 175 70 C200 100 230 108 310 110" fill="none" stroke="#1a5f7a" stroke-width="3.5"/>
+    ${[[40,30],[110,34],[160,55],[190,88],[250,106],[308,110]].map((p,i)=>`<circle class="dose-pt" cx="${p[0]}" cy="${p[1]}" r="5" fill="#c45c3e" style="animation-delay:${(1+i*0.12).toFixed(2)}s"/>`).join("")}
+    <text x="180" y="140" text-anchor="middle" font-size="9" fill="#4a5c58">log[濃度] → 応答（4PL・IC50 確定）</text></svg>`; }
+function figPaper(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><g transform="translate(140,20)"><rect width="120" height="130" rx="6" fill="#fff" stroke="#d4cfc4"/><rect x="18" y="18" width="84" height="10" rx="2" fill="#0c3d3a"/>
+    ${[40,54,68,82,96,110].map((y,i)=>`<line class="doc-line ${i>0?'d'+Math.min(i+1,4):''}" x1="18" y1="${y}" x2="${18+(i%2?60:84)}" y2="${y}" stroke="#4a5c58" stroke-width="2.5"/>`).join("")}
+    <circle cx="90" cy="112" r="12" fill="#2d6a4f"/><path d="M84 112 l4 4 8 -9" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g class="rise" transform="translate(300,60)"><rect width="60" height="8" rx="4" fill="#a8dadc"/><text x="30" y="-6" text-anchor="middle" font-size="9" fill="#4a5c58">監査trail 添付</text></g></svg>`; }
+function figRival(){ return `<svg viewBox="0 0 400 170" width="100%" height="100%"><line x1="20" y1="140" x2="380" y2="140" stroke="#d4cfc4" stroke-width="3"/>
+    <g class="runner" transform="translate(120,96)"><circle cy="-24" r="10" fill="#1a5f7a"/><rect x="-5" y="-14" width="10" height="26" rx="4" fill="#1a5f7a"/><rect x="-14" y="-8" width="12" height="5" rx="2" fill="#1a5f7a" transform="rotate(-20)"/></g>
+    <g class="runner" transform="translate(210,96)" style="animation-delay:-1s"><circle cy="-24" r="10" fill="#bc6c25"/><rect x="-5" y="-14" width="10" height="26" rx="4" fill="#bc6c25"/><rect x="2" y="-8" width="12" height="5" rx="2" fill="#bc6c25" transform="rotate(20)"/></g>
+    <text x="360" y="70" text-anchor="end" font-family="Georgia,serif" font-size="13" fill="#0c3d3a">🏁 先行研究の壁</text></svg>`; }
+
+function burstConfetti(){ if(!hasRAF || typeof document.getElementById!=="function") return; const cv=document.getElementById("confetti"); if(!cv||!cv.getContext) return;
+  cv.classList.remove("hidden"); const ctx=cv.getContext("2d"); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=["#1a5f7a","#2d6a4f","#c45c3e","#bc6c25","#a8dadc","#5f3dc4"], P=[];
+  for(let i=0;i<140;i++) P.push({ x:innerWidth/2+(Math.random()-.5)*200, y:innerHeight/3, vx:(Math.random()-.5)*8, vy:Math.random()*-9-3, g:.22+Math.random()*.15, r:4+Math.random()*5, c:cols[i%cols.length], a:1, rot:Math.random()*6, vr:(Math.random()-.5)*.4 });
+  const t0=performance.now();
+  (function fr(t){ ctx.clearRect(0,0,cv.width,cv.height); let alive=false;
+    for(const p of P){ p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.a=clamp(1-(t-t0)/2600,0,1);
+      if(p.a>0 && p.y<cv.height+20){ alive=true; ctx.save(); ctx.globalAlpha=p.a; ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6); ctx.restore(); } }
+    if(alive) requestAnimationFrame(fr); else cv.classList.add("hidden"); })(performance.now()); }
+function initAmbient(){ const svg=document.getElementById("ambient"); if(!svg) return; svg.setAttribute("viewBox","0 0 1440 900"); svg.setAttribute("preserveAspectRatio","xMidYMid slice");
+  const pts=[[120,160],[1320,120],[300,720],[1180,760],[760,90],[60,520],[1400,460]]; let out="";
+  pts.forEach((p,i)=>{ const dur=(9+i*1.6).toFixed(1), col=["#1a5f7a","#2d6a4f","#c45c3e","#5f3dc4"][i%4];
+    out+=`<g opacity="0.5"><g transform="translate(${p[0]},${p[1]})"><line x1="0" y1="0" x2="26" y2="16" stroke="${col}" stroke-width="2"/><line x1="26" y1="16" x2="52" y2="0" stroke="${col}" stroke-width="2"/><circle r="6" fill="${col}"/><circle cx="26" cy="16" r="6" fill="${col}"/><circle cx="52" cy="0" r="6" fill="${col}"/><animateTransform attributeName="transform" type="translate" values="0 0; 0 -26; 0 0" dur="${dur}s" repeatCount="indefinite"/></g></g>`; });
+  svg.innerHTML=out; }
+
+
+/* ============================================================
+   ラウンド進行・DMTA・イベント・ドラマ・エンディング
+   ============================================================ */
+
+/* ---- 60-engine.js ---- */
+function startRound(){ state.round+=1; const carry=state.rd.noiseFromPrev; state.rd={}; if(carry) state.rd.noiseFromPrev=carry;
+  // Refill the event pool with the shared events plus ONLY the current theme's bespoke event.
+  if(!state.eventPool.length) state.eventPool=shuffle(Object.keys(EVENTS).filter(id=>!EVENTS[id].theme || EVENTS[id].theme===state.theme)); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function themeObj(){ return THEMES[state.theme]; }
+function expText(){ const t=themeObj(); return t.steps[Math.min(state.round-1,t.steps.length-1)]; }
+function computeZ(){ const rd=state.rd,t=themeObj(); let z=0.15;
+  z+=({cited:0.30,deep:0.40,guess:0.05})[rd.protocol]||0.05; z+=rd.controls?0.15:0;
+  if(rd.exec==="robot") z+=0.15; else z+=0.05+(rng()*0.15-0.08);
+  if(rd.concGood) z+=0.06;
+  z+=(state.ab.jikken-50)/450;                 // 実験力（能力値）
+  if(hasSkill("seimitsu")) z+=0.08;            // コツ「精密ピペット」
+  if(rd.studentBonus) z+=rd.studentBonus;      // 育った後輩の助力
+  if(state.tairyoku<15) z-=0.05;               // 疲労でミス
+  z-=(t.diff-1)*0.35; if(rd.estopIgnored) z-=0.20; if(rd.contamRisk) z-=0.12; if(rd.lotRisk) z-=0.10;
+  return clamp(z,0.02,0.95); }
+function milestoneFor(){ if(state.round===3 && !state.flags.ms3) return "milestone_lead"; if(state.round===5 && !state.flags.ms5) return "milestone_valid"; return "daily"; }
+
+/* ---- 71-scenes-intro.js ---- */
+const SCENES={};
+
+/* ---------- タイトル ---------- */
+SCENES.title=()=>{ const sv=hasSave();
+  return { fullscreen:true,
+  html:`<div class="scene"><div class="hero"><div class="hero-stage">${figTitle()}</div>
+    <div class="kick">Autolab Loop 研究室シミュレーション</div>
+    <h1>オートラボ・クエスト<br><em>DMTA ループで新薬を見つけろ</em></h1>
+    <p class="sub">あなたは大学研究室に着任した<b>助教</b>。自分の研究テーマを回しながら、<b>後輩を育て</b>、実力（能力値）を磨き、
+    <b>再現性のある研究成果</b>を出して<b>准教授</b>を目指す。研究費・時間・体力・やる気は有限。同僚の捏造疑惑、研究室の揉め事、
+    競合ラボとの時間差競争も待つ ―― パワプロ「サクセス」のように腰を据えて挑む、約 1 時間の研究人生だ。</p>
+    <div class="pills"><span>助教サクセス</span><span>能力値を磨く</span><span>後輩を育てる</span><span>Autolab Loop 運用度</span><span>捏造ゲート</span><span>監査 trail</span><span>反対尋問で矛盾を暴け</span><span>研究公正監査</span><span>使わねばクビ</span><span>競合レース</span></div>
+    <div class="btnrow">
+      ${sv?`<button class="btn btn--solid btn--big" id="continueBtn">つづきから（Round ${sv.round}・${THEMES[sv.theme]?THEMES[sv.theme].name:''}）</button><button class="btn btn--ghost" id="startBtn">最初から</button>`
+           :`<button class="btn btn--solid btn--big" id="startBtn">研究室へ向かう</button><a class="btn btn--ghost" href="${PRODUCT_URL}">Autolab Loop とは？</a>`}
+    </div>
+    <div class="howto"><h3>あそびかた</h3><ul>
+      <li>最初に<b>難易度</b>（やさしい／ふつう／むずかしい）を選ぶ。研究費・期間・目標エビデンス・競合の速さ・反対尋問の自信が変わる。</li>
+      <li>物語は<b>選択肢</b>で進む。各手に <span class="tag cost">コスト</span> <span class="tag pos">得</span> <span class="tag neg">損</span> <span class="tag risk">リスク</span> <span class="tag rel">関係</span> の目安。</li>
+      <li>各ラウンドは <b>「研究室の日々」</b>（練習コマンド）から始まる ―― トレーニングで<b>能力値</b>を伸ばし、<b>後輩指導</b>でラボ評価を上げ、休養で<b>体力・やる気</b>を整える。</li>
+      <li>DMTA を数ラウンド回し、<b>エビデンス</b>を目標値（難易度で 90〜130）まで積む。育てた後輩は<b>実験を任せられる戦力</b>になり、能力を極めると<b>特殊能力（コツ）</b>を習得する。</li>
+      <li><b>Autolab Loop を正しく使え。</b>出典手順・ロボット・QC・E-stop・監査trail を活かすほど<b>効率的で成果が出る</b>。バイパスすると<b>ループ運用度</b>が下がり、非効率で再現しない ―― 教授の面談で警告され、続けば<b>クビ（解雇）</b>だ。</li>
+      <li><b>結果を疑え。</b>怪しいヒットや<b>誰かの"出来すぎたデータ"</b>は <b>反対尋問</b>（逆転裁判風）で追及 ―― 証言を《ゆさぶり》、監査 trail の<b>証拠を突きつけて</b>矛盾を暴く。投稿時は逆に、あなたの結果が疑われる番だ。</li>
+      <li>右の<b>能力カード</b>・<b>後輩の育成度</b>・<b>競合ラボの進捗バー</b>、そして誠実さが、結末（査定ランク・称号）を左右する。</li>
+      <li><b>整合性が 0 で論文撤回</b>。進行は<b>自動保存</b>され、いつでも「中断」→「つづきから」で再開できる。</li>
+      <li><b>操作：</b>選択肢は<b>数字キー</b>（1〜9）、続行だけの場面は <b>Enter</b> でも進める。もちろんマウス／タップも可。</li>
+    </ul>${sv?'<p class="continue-note">保存データがあります。「つづきから」で再開できます。</p>':''}</div>
+  </div></div>`, choices:[] }; };
+
+/* ---------- 着任 ---------- */
+SCENES.difficulty_pick=()=>({ badge:"難易度選択", badgeClass:"story", figure:"loop", title:"研究人生の、厳しさを選ぶ",
+  body:`<p>助教としての一年 ―― どれだけ過酷な条件で挑むかを、いま決める。選んだ難易度で
+    <em>研究費・期間・目標エビデンス・競合ラボの速さ・反対尋問の自信</em>が変わる。あとで変えるにはやり直しになる。</p>`,
+  loop:"はじめてなら「やさしい」で loop をひととおり体験できます。腕試しなら「むずかしい」。難易度は結末の査定にも表示されます。",
+  choices:Object.entries(DIFF).map(([id,d])=>{ const stars=id==="easy"?"★☆☆":id==="hard"?"★★★":"★★☆"; return { t:`${d.name}　<span style="color:var(--hit);letter-spacing:.1em">${stars}</span>`, d:d.note,
+    cost:[[`難易度：${d.tag}`, id==="easy"?"pos":(id==="hard"?"neg":"risk")], [`研究費 ${Math.round(d.budget/10000)}万`,"cost"], [`${d.weeks}週`,"cost"], [`目標 ${d.winEv}`,"cost"], [`確認 ${d.verifyN}回`,"cost"], [`競合 ${id==="easy"?"遅":id==="hard"?"速":"標準"}`,"risk"]],
+    go(){ state.diff=id; state.budget=d.budget; state.weeks=d.weeks; state.budget0=d.budget; state.weeks0=d.weeks; state.yaruki=d.startMot; state.tairyoku=d.startTai; state.verifyCredits=d.verifyN; log(`難易度：${d.name}（確認 ${d.verifyN} 回）`,"integ"); return "arrival"; } }; }) });
+
+SCENES.arrival=()=>({ badge:"着任", badgeClass:"story", figure:"lab", title:"湊都大学 生命創薬研究室 ― 新任助教として",
+  body:`<p>古い理学部棟の 4 階。試薬の匂いと低いモーター音。<em>霧島教授</em>があなたを迎える ―― 今日からあなたは、この研究室の<b>助教</b>だ。
+    先輩ポスドクの<em>佐倉</em>がちらりとこちらを見て、また画面に戻る。あなたが指導することになる後輩 ―― M2 の<em>卓也</em>と B4 の<em>美咲</em>が、緊張気味に会釈した。</p>
+    <p>霧島教授「よく来た。自分の研究を回しつつ、<b>この二人を育ててやってくれ</b>。うちは去年 <b>Autolab Loop</b> を入れてね ―― 設計から実測・解析・次の一手まで一本の loop で回している。まず、君の専門を聞かせてくれ。」</p>`,
+  loop:"はじめまして。私が実行 OS「ループ」です。あなたの手はすべて監査 trail に残し、根拠のない手順は実行前に止めます。進行は自動保存します。",
+  choices:Object.entries(BACKGROUNDS).map(([id,b])=>({ t:b.name, d:`${b.role} ―― ${b.blurb}`, cost:[[b.note,"pos"]],
+    go(){ state.bg=id; applyFxObj(b.fx); log(`専門：${b.name}`,"integ"); return "theme_pick"; } })) });
+
+/* ---------- テーマ ---------- */
+SCENES.theme_pick=()=>({ badge:"テーマ付与", badgeClass:"story", figure:"dna", title:"研究テーマを選ぶ",
+  body:`<p>霧島教授「テーマは ${Object.keys(THEMES).length} つ。臨床的意義はどれもある。ただし <em>難しさは同じじゃない</em>。早く成果が欲しいなら手堅く、腕を試すなら難関を。」</p>`,
+  loop:"どのテーマでも loop の回し方は同じです。難関ほど QC と再現確認がシビアになります。",
+  choices:Object.entries(THEMES).map(([id,t])=>({ t:`<span style="color:${t.accent||'var(--teal)'}">●</span> ${t.name}（${t.disease}）`, d:t.brief, cost:[[`難易度：${t.tag}`,t.diff<=1?"pos":(t.diff>=1.5?"neg":"risk")],[t.assay,"cost"]],
+    go(){ state.theme=id; log(`テーマ確定：${t.name}`,"integ"); return "briefing"; } })) });
+
+SCENES.briefing=()=>{ const t=themeObj(); return { badge:"ブリーフィング", badgeClass:"story", figure:"loop", title:`ミッション：${t.name}`,
+  body:`<p>霧島教授「狙いは <em>${t.name}</em>（${t.disease}）だ。」</p>
+    <div class="fig"><b>難易度：</b>${curDiff().name}<br><b>アッセイ：</b>${t.assay}<br><b>${t.refs}</b><br><b>ゴール：</b>QC 合格プレートと用量反応で裏づけたヒットを積み、エビデンスを ${winEv()} に到達させて論文投稿へ。成果と後輩育成・評価が揃えば ―― <b>准教授昇任</b>の道が開ける。</div>
+    <p>「予算 <b>${Math.round(state.budget/10000)}万円</b>、期間 <b>${state.weeks}週</b>。東棟の<b>有馬ラボ</b>も同じ標的を追っている。先を越される前に、しかし捏造せず、後輩も育てながら成果を出せ。……欲張りに聞こえるか？ それが助教だ。」</p>`,
+  loop:"最初のラウンドを始めましょう。各ラウンドは 戦略→手順→調製→濃度→実行→QC→レビュー→解析 の判断で構成されます。",
+  choices:[{ t:"Round 1 を始める（DMTA ループへ）", cost:[["いざ、ベンチへ","pos"]], go(){ startRound(); return milestoneFor(); } }] }; };
+
+/* ---------- マイルストーン ---------- */
+SCENES.milestone_lead=()=>{ state.flags.ms3=true; return { badge:"フェーズ移行", badgeClass:"story", figure:"loop", title:"ヒット確認 ―― 最適化フェーズへ",
+  body:`<p>プライマリで確からしいヒットが見えてきた。ここからは <em>hit-to-lead 最適化</em> ―― 活性だけでなく、選択性・溶解性・代謝安定性を同時に押し上げる多目的の loop に入る。</p>
+    <p>霧島教授「ここからが本番だ。一つ効くだけじゃ薬にならん。<b>効いて・選択的で・体で保つ</b>。三兎を追え。」</p>`,
+  loop:"最適化フェーズでは、複数の目的（活性・選択性・ADMET）を睨みながら次候補を選びます。焦らず、根拠を積み上げましょう。",
+  choices:[{ t:"最適化ラウンドを始める", cost:[["前進","pos"]], go(){ return "daily"; } }] }; };
+SCENES.milestone_valid=()=>{ state.flags.ms5=true; return { badge:"フェーズ移行", badgeClass:"story", figure:"dose", title:"検証フェーズ ―― 再現性で勝負する",
+  body:`<p>候補は絞れた。残る問いはただ一つ ―― <em>それは本当に、誰がやっても再現するのか</em>。ここからは独立バッチと用量反応で、リードの再現性を固めにいく。</p>
+    <p>霧島教授「有馬ラボも近い。だが速さで負けても、<b>再現性で勝てば</b>論文は強い。ここは丁寧にいこう。」</p>`,
+  loop:"検証フェーズです。QC と用量反応の質が、そのまま論文の強さになります。監査 trail が再現性の証拠になります。",
+  choices:[{ t:"検証ラウンドを始める", cost:[["前進","pos"]], go(){ return "daily"; } }] }; };
+
+/* ---------- 研究室の日々（サクセス風・週の過ごし方） ---------- */
+
+/* ---- 72-scenes-round.js ---- */
+function mentorStudent(){
+  // 育成度が最も高い後輩に集中投資（一人をエースに育てる）。100 到達済みなら次の子へ。
+  const ids=Object.keys(state.students); ids.sort((a,b)=>state.students[b].grow-state.students[a].grow);
+  let sid=ids[0]; if(state.students[sid].grow>=100 && state.students[ids[1]]) sid=ids[1];
+  const s=state.students[sid];
+  const up=Math.max(4, Math.round((13+state.ab.shidou/9)*motFactor()*(1-s.grow/135)));
+  s.grow=clamp(s.grow+up,0,100); s.bond=clamp(s.bond+8,0,100);
+  const gained=abilityGain("shidou",6);
+  let ev=Math.round((5+state.ab.shidou/12)*((hasSkill("mendoumi")||hasSkill("rinsho"))?1.5:1));
+  cred(ev); motiv(2); log(`${s.name} を指導（育成度 +${up}・指導力 +${gained}・評価 +${ev}）`,"drama");
+  if(s.grow>=60 && !s.helped){ s.helped=true; log(`${s.name} が戦力化：実験の実行を任せられるように`,"win"); }
+  let milestone=false;
+  if(s.grow>=82 && !s.milestone){ s.milestone=true; state.flags._msStudent=sid; milestone=true; }
+  return { s, milestone };
+}
+function consultTeacher(){
+  cred(2); motiv(3);
+  if(rng()<0.4){ const pool=["bunkenou","taryoku_baka","kousho","rinsho"].filter(id=>!hasSkill(id));
+    if(pool.length){ addSkill(pool[Math.floor(rng()*pool.length)]); log("教授の助言でコツを掴んだ","win"); return; } }
+  log("教授に相談（助言で やる気↑）","integ");
+}
+SCENES.daily=()=>{ const lowSta=state.tairyoku<25, lowMot=state.yaruki<25;
+  return { badge:`研究室の日々 ― R${state.round}`, badgeClass:"story", figure:"lab", title:"今週、何に時間を使う？",
+  body:`<p>実験に入る前の一週間。助教のあなたは、自分を磨くも、後輩を育てるも、休むも自由だ。
+    ${lowSta?'<em>体力がかなり削れている。無理を続けるとミスが増える。</em>':''}${lowMot?'<em>やる気も下がり気味。休養が効くかもしれない。</em>':''}</p>
+    <div class="fig">やる気 <b>${state.yaruki}</b> ／ 体力 <b>${state.tairyoku}</b> ―― 活動は体力を使い、休養で戻る。能力値と特殊能力は、この週の積み重ねで伸びる。</div>`,
+  loop:"サクセスの練習コマンドのように、この一手が助教としての実力と、ラボでの評価を作っていきます。",
+  choices:[
+    { t:"実験トレーニングで腕を磨く", d:"実験力↑。QC の安定に効く。", cost:[["実験力↑","pos"],["時間 -1週","cost"],["体力 -","cost"]], go(){ const g=abilityGain("jikken",7); spendStamina(16); motiv(2); weeks(-1); log(`実験トレーニング（実験力 +${g}）`,"integ"); return "design_strategy"; } },
+    { t:"統計・データ解析を勉強する", d:"統計力↑。エビデンス効率に効く。", cost:[["統計力↑","pos"],["時間 -1週","cost"],["体力 -","cost"]], go(){ const g=abilityGain("toukei",7); spendStamina(14); weeks(-1); log(`統計の勉強（統計力 +${g}）`,"integ"); return "design_strategy"; } },
+    { t:"後輩を指導する", d:"指導力↑・ラボ評価↑・後輩が育つ。育つと実験を任せられる。", cost:[["指導力↑","pos"],["評価↑","pos"],["育成↑","rel"],["時間 -1週","cost"]], go(){ const r=mentorStudent(); spendStamina(14); weeks(-1); return r.milestone?"student_milestone":"design_strategy"; } },
+    { t:"論文執筆・学会・発信に力を入れる", d:"発信力↑・評価↑。", cost:[["発信力↑","pos"],["評価 +","pos"],["時間 -1週","cost"]], go(){ const g=abilityGain("hasshin",7); const ev=Math.round(3+state.ab.hasshin/18); cred(ev); spendStamina(13); weeks(-1); log(`発信活動（発信力 +${g}・評価 +${ev}）`,"integ"); return "design_strategy"; } },
+    { t:"休養してコンディションを整える", d:"体力とやる気を回復。", cost:[["体力 +","pos"],["やる気 +","pos"],["時間 -1週","cost"]], go(){ stam(38); motiv(12); weeks(-1); log("休養（体力・やる気 回復）"); return "design_strategy"; } },
+    { t:"霧島教授に相談する", d:"助言。ときに特殊能力（コツ）を掴む。", cost:[["やる気 +","pos"],["コツ機会","risk"],["時間 -1週","cost"]], go(){ consultTeacher(); spendStamina(7); weeks(-1); return "design_strategy"; } },
+  ] }; };
+SCENES.student_milestone=()=>{ const id=state.flags._msStudent||"taku"; const s=state.students[id]; const passSkill = id==="misaki"?"toukei_me":"seimitsu";
+  return { badge:"後輩の成長", badgeClass:"event", figure:"drama", title:`${s.name} が、殻を破った`,
+  body:`<p>あなたが根気よく指導してきた <em>${s.name}</em> が、学内の発表会で高く評価された。指導教員はあなた ―― <b>あなたのラボ評価も跳ね上がる</b>。
+    ${s.name} は照れながら、自分が磨いた技術のコツをあなたにも共有してくれた。</p>`,
+  loop:"後輩の成長は、指導者であるあなたの評価そのものです。良い師のもとに、良い研究者が育つ。",
+  choices:[{ t:"成長を喜び、コツを受け取る", cost:[["評価 +12","pos"],["やる気 +10","pos"],["コツ習得","pos"]],
+    go(){ cred(12); motiv(10); addSkill(passSkill); log(`${s.name} の成長で評価が上昇（+12）`,"win"); return "design_strategy"; } }] }; };
+
+/* ---------- DESIGN 1: 戦略 ---------- */
+SCENES.design_strategy=()=>({ badge:`DESIGN・戦略 ― R${state.round}`, badgeClass:"design", figure:"dna", title:`今ラウンドの狙い：${expText()}`,
+  body:`<p>ループが今ラウンドの目的を提示した。どんな<em>攻め方</em>で臨むかで、得られるエビデンスとリスクが変わる。</p>
+    <div class="fig"><b>目的：</b>${expText()}<br><b>アッセイ：</b>${themeObj().assay}</div>`,
+  loop:"大胆に攻めると当たりは大きいが、<em>見かけの活性（偽陽性）も増え</em>、後の判定が難しくなります。堅実に絞れば偽陽性は少なく読みやすい ―― どちらを取るかは、あなたの統計力次第。",
+  choices:[
+    { t:"既知骨格の周辺を手堅く攻める", d:"上振れは中くらい、偽陽性は普通。バランス型。", cost:[["評価 +1","pos"],["安定","pos"]], go(){ state.rd.stratMult=1.0; state.rd.strat="focused"; cred(1); log("戦略：手堅く周辺探索","integ"); return "design"; } },
+    { t:"新規ケモタイプに大胆に賭ける", d:"当たれば大きいが、偽陽性が増える＝後の判定でより疑う目が要る。", cost:[["エビデンス期待 +","pos"],["偽陽性↑","risk"]], go(){ state.rd.stratMult=1.24; state.rd.strat="bold"; log("戦略：新規ケモタイプに賭ける（偽陽性↑）","integ"); return "design"; } },
+    { t:"まず範囲を絞って確実な一歩", d:"上振れは控えめだが偽陽性が少なく、読み違いのリスクが小さい。", cost:[["整合性 +2","pos"],["偽陽性↓","pos"]], go(){ state.rd.stratMult=0.9; state.rd.strat="safe"; integ(2); log("戦略：範囲を絞って確実に","integ"); return "design"; } },
+  ] });
+
+/* ---------- DESIGN 2: 手順（捏造ゲート） ---------- */
+SCENES.design=()=>({ badge:`DESIGN・手順 ― R${state.round}`, badgeClass:"design", figure:"design", title:"手順パラメータの根拠づけ",
+  body:`<p>分注量・温度・インキュベーション時間・対照配置 ―― 各パラメータをどう根拠づけるかで、後の QC が決まる。</p>`,
+  loop:"各パラメータに文献の逐語根拠を紐付けられます。根拠のない値のまま実行しようとすると、私が止めます。",
+  choices:[
+    { t:"出典付き手順を採用する（RAG 検索）", d:"KB から逐語根拠付きの条件を取得。堅実で速い。", cost:[["研究費 -12万","cost"],["時間 -1週","cost"],["整合性 +5","pos"]],
+      go(){ money(-120000,"出典付き手順"); weeks(-1); integ(5); loopScore(4); state.rd.protocol="cited"; state.rd.q=hasSkill("bunkenou")?1.08:1.0; if(hasSkill("bunkenou")) integ(2); log("出典付き手順を採用（ループ運用↑）","integ"); return "design_library"; } },
+    { t:"文献を精読して自分で裏取りする", d:"時間はかかるが最も堅い。評価も上がる。", cost:[["研究費 -10万","cost"],["時間 -2週","cost"],["整合性 +8","pos"],["評価 +3","pos"]],
+      go(){ money(-100000,"文献精読"); weeks(-2); integ(8); cred(3); loopScore(2); state.rd.protocol="deep"; state.rd.q=1.15; log("文献精読で条件確定（整合性+8）","integ"); return "design_library"; } },
+    { t:"うろ覚えの条件で素早く進める（loop を無視）", d:"速いが危険。根拠のない値は捏造ゲートに引っかかり、ループ運用も落ちる。", cost:[["時間 -1週","cost"],["ゲート判定","risk"],["ループ運用↓","neg"]],
+      go(){ weeks(-1); if(rng()<0.55){ log("捏造ゲート作動：無出典パラメータで実行停止","gate"); integ(2); loopScore(-2); return "gate_block"; }
+        money(-120000,"見切り発車"); integ(-10); loopScore(-6); state.rd.protocol="guess"; state.rd.q=0.6; log("無出典条件がすり抜けて進行（整合性・ループ運用↓）","integ"); return "design_library"; } },
+  ] });
+SCENES.gate_block=()=>({ badge:"捏造ゲート", badgeClass:"design", figure:"gate", title:"実行前レビューで停止しました",
+  body:`<p>プロトコルを実機に流そうとした瞬間、画面が赤くなった。</p>
+    <div class="fig"><b>停止理由：</b>温度と検出試薬濃度に<b>出典が見つからない</b>。根拠を確認できないため<b>実行前レビューで自動停止</b>。<br><b>被害：</b>なし ―― 試薬・プレートは未消費。</div>
+    <p>霧島教授「ほらな。ループは"それっぽい手順"を通さん。根拠のない一手は結局この画面で止まる。」</p>`,
+  loopGate:true, loop:"根拠のないパラメータを検出し、試薬を消費する前に停止しました。出典を取り直せば実行できます。",
+  choices:[{ t:"出典付き手順に切り替える", d:"素直に根拠づけし直す。試薬は無駄になっていない。", cost:[["研究費 -12万","cost"],["時間 -1週","cost"],["整合性 +5","pos"]],
+    go(){ money(-120000,"出典付き手順に切替"); weeks(-1); integ(5); loopScore(3); state.rd.protocol="cited"; state.rd.q=hasSkill("bunkenou")?1.08:1.0; if(hasSkill("bunkenou")) integ(2); log("出典付き手順に切替（ゲート後・ループ運用↑）","integ"); return "design_library"; } }] });
+
+/* ---------- DESIGN 3: ライブラリ ---------- */
+SCENES.design_library=()=>({ badge:`DESIGN・化合物 ― R${state.round}`, badgeClass:"design", figure:"design", title:"化合物ライブラリの選定",
+  body:`<p>どの化合物群を試すか。焦点を絞るほど当たりは濃く、広げるほど新規性が上がるがコストもかさむ。</p>`,
+  loop:"フォーカスト・ライブラリは既知骨格の周辺を濃く探索、多様性ライブラリは新規性を取りにいく戦略です。",
+  choices:[
+    { t:"フォーカスト・ライブラリ（構造絞り込み）", d:"当たりが濃く、エビデンス効率が良い。", cost:[["研究費 -14万","cost"],["エビデンス +","pos"]], go(){ money(-140000,"フォーカスト・ライブラリ"); state.rd.libMult=1.1; log("フォーカスト・ライブラリを選定"); return "make"; } },
+    { t:"多様性重視の広いライブラリ", d:"新規性は高いが高コスト。", cost:[["研究費 -24万","cost"],["新規性","pos"]], go(){ money(-240000,"多様性ライブラリ"); state.rd.libMult=1.0; state.rd.novel=true; cred(1); log("多様性ライブラリを選定"); return "make"; } },
+    { t:"手持ち・安価な化合物で回す", d:"安いが伸びは控えめ。", cost:[["研究費 -6万","cost"],["伸び控えめ","cost"]], go(){ money(-60000,"手持ち化合物"); state.rd.libMult=0.85; log("手持ち化合物で調製"); return "make"; } },
+  ] });
+
+/* ---------- MAKE 1: 対照 ---------- */
+SCENES.make=()=>({ badge:`MAKE ― R${state.round}`, badgeClass:"make", figure:"make", title:"調製とプレート設計",
+  body:`<p>化合物を溶解し 384-well にレイアウト。<em>陽性/陰性対照</em>と<em>反復（triplicate）</em>をどこまで積むかで、QC の Z-factor と統計が変わる。</p>`,
+  loop:"対照と反復を十分に置くと、Analyze で Welch t と FDR がしっかり効きます。ケチると偽陽性を掴みやすくなります。",
+  choices:[
+    { t:"対照をフル配置し triplicate で組む", d:"教科書どおり。QC も統計も強い。", cost:[["研究費 -25万","cost"],["時間 -1週","cost"],["QC 強化","pos"]], go(){ money(-250000,"対照フル・triplicate"); weeks(-1); state.rd.controls=true; log("対照フル配置＋triplicate","integ"); return "make_conc"; } },
+    { t:"対照を最小限にしてコストを抑える", d:"安いが QC が下振れしやすい。", cost:[["研究費 -12万","cost"],["時間 -1週","cost"],["QC リスク","risk"]], go(){ money(-120000,"対照最小"); weeks(-1); state.rd.controls=false; log("対照最小で調製（QC リスク）"); return "make_conc"; } },
+  ] });
+
+/* ---------- MAKE 2: 濃度系列 ---------- */
+SCENES.make_conc=()=>({ badge:`MAKE・濃度 ― R${state.round}`, badgeClass:"make", figure:"make", title:"濃度系列の設計",
+  body:`<p>化合物の希釈系列をどう組むか。8 点系列にしておくと、後の用量反応・IC50 が素直に取れる。単一濃度なら速いが、確認で追加実験が要る。</p>`,
+  loop:"8 点系列は後工程（用量反応）に効きます。ここでの一手間が、検証フェーズの再現性を左右します。",
+  choices:[
+    { t:"8 点用量系列で丁寧に組む", d:"Z と後の IC50 に有利。", cost:[["研究費 -10万","cost"],["時間 -1週","cost"],["QC +","pos"]], go(){ money(-100000,"8点用量系列"); weeks(-1); state.rd.concGood=true; log("8点用量系列で調製","integ"); return "test_mode"; } },
+    { t:"単一濃度スクリーニングで速く", d:"安く速いが精度は落ちる。", cost:[["研究費 -4万","cost"],["精度 -","cost"]], go(){ money(-40000,"単一濃度"); state.rd.concGood=false; log("単一濃度で調製"); return "test_mode"; } },
+  ] });
+
+/* ---------- TEST ---------- */
+SCENES.test_mode=()=>{
+  // 戦力化した後輩がいれば実行を任せられる（指導の成果）
+  let helper=null; for(const id in state.students){ const s=state.students[id]; if(s.grow>=60 && (!helper || s.grow>helper.grow)) helper=s; }
+  const ch=[
+    { t:"Opentrons ロボットで自分が実行する", d:"分注が安定し QC が上がる。逸脱時は E-stop で保護。体力を使う。", cost:[["研究費 -35万","cost"],["時間 -1週","cost"],["体力 -","cost"],["QC +","pos"]],
+      go(){ money(-350000,"ロボット実行"); weeks(-1); spendStamina(14); loopScore(3); state.rd.exec="robot"; log("Opentrons で実行（ループ運用↑）","integ"); if(rng()<0.45) return "estop_event"; state.rd.z=computeZ(); return "qc"; } },
+    { t:"手動 HTS で自分が実行する", d:"安いが遅く、ばらつきが出る。体力を大きく使う。", cost:[["研究費 -18万","cost"],["時間 -2週","cost"],["体力 --","cost"],["ばらつき","risk"]],
+      go(){ money(-180000,"手動 HTS"); weeks(-2); spendStamina(20); loopScore(-1); state.rd.exec="manual"; state.rd.z=computeZ(); log("手動 HTS で実行（系外・やや非効率）"); return "qc"; } },
+  ];
+  if(helper){ ch.push({ t:`後輩の ${helper.name} に実行を任せる`, d:`育てた後輩が実行。あなたの体力を使わず、評価も上がる。育成度が高いほど QC も安定。`, cost:[["研究費 -30万","cost"],["時間 -1週","cost"],["評価 +3","pos"],["体力 温存","pos"]],
+      go(){ money(-300000,"後輩に実行を委任"); weeks(-1); helper.bond=clamp(helper.bond+5,0,100); cred(3); abilityGain("shidou",2); loopScore(2);
+            state.rd.exec="robot"; state.rd.studentRun=true; state.rd.studentBonus=clamp((helper.grow-60)/300,0,0.1); state.rd.z=computeZ();
+            log(`${helper.name} に実行を委任（評価 +3・体力温存）`,"drama"); return "qc"; } }); }
+  return { badge:`TEST ― R${state.round}`, badgeClass:"test", figure:"test", title:"アッセイの実行方法",
+    body:`<p><em>Opentrons ロボット</em>なら分注が安定するが機器コストがかかる。<em>手動 HTS</em>は安いが、ばらつきと時間が増える。${helper?`<br>そして今は ―― 育てた <em>${helper.name}</em> に任せるという手もある。`:""}</p>`,
+    loop: helper?"後輩が戦力化しました。実行を任せれば、あなたは体力を温存でき、育成の評価も積み上がります。":"ロボット実行中は逸脱を常時監視し、危険を検知したら E-stop で止めます。復帰は承認制です。",
+    choices:ch }; };
+SCENES.estop_event=()=>({ badge:"E-STOP", badgeClass:"test", figure:"estop", title:"逸脱を検知 ― 安全停止がラッチ",
+  body:`<p>無人運転の途中、アラート。</p><div class="fig"><b>検知：</b>チップ位置ずれ（想定エンベロープ外のモーション）。<b>E-stop が自動でラッチ</b>し後続分注を遮断。プレートはまだ生きている。</div>`,
+  loopGate:true, loop:"E-stop ラッチ済み。原因を確認して承認すれば安全に復帰、無視して続けると分注が崩れます。",
+  choices:[
+    { t:"停止を承認 → 原因を確認して復帰する", d:"正攻法。プレートを救い、対応を trail に残す。", cost:[["時間 -1週","cost"],["評価 +2","pos"],["ループ運用↑","pos"]], go(){ weeks(-1); cred(2); loopScore(4); state.rd.z=computeZ(); log("E-stop 承認・確認して復帰（ループ運用↑）","estop"); return "qc"; } },
+    { t:"アラートを無視して続行させる（安全系を軽視）", d:"時間は稼げるがプレートが崩れ、教授の信頼も損なう。", cost:[["整合性 -5","neg"],["QC 悪化","neg"],["ループ運用↓↓","neg"]], go(){ integ(-5); loopScore(-8); state.rd.estopIgnored=true; state.rd.z=computeZ(); log("E-stop 無視で続行（安全系軽視・ループ運用↓）","integ"); return "qc"; } },
+  ] });
+
+/* ---------- QC ---------- */
+SCENES.qc=()=>{ const z=state.rd.z!=null?state.rd.z:(state.rd.z=computeZ()); const pass=z>=0.5, zStr=z.toFixed(2);
+  if(!state.rd._qcLogged){ log(`QC：Z-factor = ${zStr}（${pass?'合格':'不合格'}）`, pass?"integ":"gate"); state.rd._qcLogged=true; }
+  return { badge:`QC ― R${state.round}`, badgeClass:"test", figure:"gauge", title:`プレート QC：Z-factor = ${zStr}`,
+    body:`<p>リーダーの生データを取り込むと、ループが即座に QC を計算した。</p>
+      <div class="fig"><b>Z-factor：</b>${zStr} ／ 判定基準 0.5<br><b>結果：</b>${pass?'<b style="color:var(--green)">合格</b> ―― アッセイウィンドウは十分。解析へ。':'<b style="color:var(--warn)">不合格</b> ―― 対照分離が足りず、このまま解析すると信用できない。'}</div>`,
+    loop: pass?`Z-factor ${zStr}。QC 合格として監査 trail に記録しました。`:`Z-factor ${zStr}。QC 不合格です。対照を見直して再実行が定石ですが、判断はあなたに委ねます。`,
+    choices: pass?[{ t:"データレビューへ進む", cost:[["QC 合格","pos"]], go(){ makeCandidates(); return "analyze_review"; } }]
+      :[{ t:"対照を見直してプレートを再実行する", d:"堅実。コストはかかるが Z を立て直す。", cost:[["研究費 -22万","cost"],["時間 -2週","cost"],["QC 改善","pos"]],
+          go(){ money(-220000,"QC やり直し"); weeks(-2); state.rd.controls=true; state.rd.exec="robot"; loopScore(3); state.rd.z=clamp(computeZ()+0.15,0.02,0.95); state.rd._qcLogged=false; state.rivalProgress+=4; log("QC 立て直しのため再実行（ループ運用↑）"); return "qc"; } },
+        { t:"この不合格データで無理に解析へ進む", d:"賭け。エビデンスは薄く整合性も落ちる。", cost:[["整合性 -12","neg"],["エビデンス減","neg"]],
+          go(){ integ(-12); loopScore(-8); state.rd.qcForced=true; makeCandidates(); log("QC 不合格のまま強行（整合性・ループ運用↓）","integ"); return "analyze_review"; } }] }; };
+
+/* Generate this round's candidate hits with a HIDDEN truth. The player is NOT
+   told which are real vs artifacts; they must read the noisy readout, weigh a
+   統計力-dependent hint, and decide whether to pay for a counter-screen or gamble.
+   Runs in a go() (uses rng) so it stays save-safe; results live in rd. */
+function makeCandidates(){
+  if(state.rd.candidates) return;
+  const code = String.fromCharCode(65 + ((state.round - 1) % 8));  // A,B,C...
+  const tag = ({ sglt2:"SGLT2", tnf:"TNF", tdp1:"TDP1", glp1:"GLP1", kinase:"ABL", abx:"ABX", gpcr:"GPCR" })[state.theme] || "CMPD";
+  // Round 1 is the scripted teaching case: the flashiest hit is an artifact.
+  // Bolder strategies produce a flashier top readout but more false positives.
+  const pReal = ({ safe:0.74, focused:0.60, bold:0.44 })[state.rd.strat] || 0.60;
+  const topReal = state.round === 1 ? false : (rng() < pReal);
+  const r = () => Math.round(rng() * 100) / 10;                    // 0.0–10.0 jitter
+  const cands = [
+    { name:`${tag}-${code}1`, readout: 74 + Math.round(rng()*16), real: topReal },
+    { name:`${tag}-${code}2`, readout: 52 + Math.round(rng()*16), real: rng() < 0.55 },
+    { name:`${tag}-${code}3`, readout: 28 + Math.round(rng()*16), real: false },
+  ];
+  state.rd.candidates = cands;
+  // A statistical read on the TOP candidate — accurate in proportion to 統計力.
+  const acc = clamp(0.5 + state.ab.toukei / 250, 0.5, 0.95);
+  state.rd.hintAcc = Math.round(acc * 100);
+  state.rd.hintClean = (rng() < acc) ? cands[0].real : !cands[0].real;   // may mislead
+}
+
+/* ---------- ANALYZE 1: データレビュー ---------- */
+function afterReview(){ if(state.round===1 && !state.flags.doubt1){ state.flags.doubt1=true; setupCross("self"); return "cross"; } return "analyze"; }
+SCENES.analyze_review=()=>({ badge:`ANALYZE・レビュー ― R${state.round}`, badgeClass:"analyze", figure:"bars", title:"生データのレビュー",
+  body:`<p>ヒット判定の前に、外れ値・エッジ効果・（テーマによっては）蛍光/発光干渉を点検する。ここでの誠実さが、後で効いてくる。</p>`,
+  loop:"外れ値の扱いも trail に残ります。除外には理由が要る ―― 都合で消したデータは、あとで必ず問われます。",
+  choices:[
+    { t:"外れ値・干渉を基準に沿って丁寧に精査する", d:"時間はかかるが整合性と質が上がる。", cost:[["時間 -1週","cost"],["整合性 +3","pos"],["エビデンス +","pos"]], go(){ weeks(-1); integ(3); loopScore(2); state.rd.reviewMult=1.08; log("データを基準どおり精査（整合性+3）","integ"); return afterReview(); } },
+    { t:"時間優先でざっとレビューする", d:"速いが取りこぼしがある。", cost:[["伸び控えめ","cost"]], go(){ state.rd.reviewMult=0.92; log("データをざっとレビュー"); return afterReview(); } },
+    { t:"都合の悪い外れ値を理由なく除外する", d:"見栄えは良くなるが、これは体裁づくり。整合性を削る。", cost:[["エビデンス +","pos"],["整合性 -12","neg"],["リスク","risk"]], go(){ integ(-12); loopScore(-6); state.rd.reviewMult=1.14; state.rd.cherry=true; log("理由のない外れ値除外（整合性・ループ運用↓）","gate"); return afterReview(); } },
+  ] });
+
+/* ---------- ANALYZE 2: ヒット判定（隠れた真実＋読み） ---------- */
+const ARTIFACT = { sglt2:"凝集（コロイド）", tnf:"細胞毒性", tdp1:"発光干渉", glp1:"自家蛍光", kinase:"レドックス干渉", abx:"光学干渉（着色・沈殿）", gpcr:"蛍光クエンチング（消光）" };
+SCENES.analyze=()=>{ const rd=state.rd;
+  const cands = rd.candidates || [{ name:"CMPD-A1", readout:72, real:true }];
+  const top = cands[0], artName = ARTIFACT[state.theme] || "干渉";
+  const hintAcc = rd.hintAcc || 70;
+  const clean = (rd.hintClean !== undefined) ? rd.hintClean : true;
+  const rows = cands.map((c,i)=>`<div style="display:flex;align-items:center;gap:.5rem;margin:.25rem 0">
+      <span style="width:5.5em;font-family:var(--serif)">${c.name}</span>
+      <span style="flex:1;height:10px;background:var(--paper-alt);border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:${c.readout}%;background:${i===0?"var(--hit)":"var(--teal)"}"></i></span>
+      <span style="width:3.2em;text-align:right;font-size:.85rem">${c.readout}%</span></div>`).join("");
+  const hint = clean
+    ? `統計力による所見：最有力の <b>${top.name}</b> は<b style="color:var(--green)">クリーンに見える</b>（この所見の信頼度 約 ${hintAcc}%）`
+    : `統計力による所見：最有力の <b>${top.name}</b> に<b style="color:var(--warn)">${artName}の兆候</b>＝偽陽性かもしれない（信頼度 約 ${hintAcc}%）`;
+  const credits = state.verifyCredits!=null ? state.verifyCredits : 3;
+  const ch = [];
+  if(credits > 0){
+    ch.push({ t:`カウンタースクリーンで確かめてから前進する（残り ${credits} 回）`, d:"確実に偽陽性を弾ける。だが検査キットは有限 ―― 全ラウンドは確かめられない。どこで使うかが勝負。", cost:[["確認 -1 回","cost"],["研究費 -12万","cost"],["整合性 +3","pos"],["確実","pos"]],
+      go(){ state.verifyCredits--; money(-120000,"カウンタースクリーン"); loopScore(3); abilityGain("toukei",2); finishAnalyze("verify"); return "analyze_result"; } });
+  }
+  ch.push({ t:"読みを信じて最有力株を前進させる", d:"検査を使わず前進。本物なら大きく前進、偽陽性なら次ラウンドに響く。統計力の所見が信頼できるなら、これが正着。", cost:[["確認を温存","pos"],["エビデンス 効率↑↑","pos"],["賭け","risk"]],
+    go(){ finishAnalyze("trust"); return "analyze_result"; } });
+  ch.push({ t:"結果を“盛って”良く見せて報告する", d:"今すぐ数字は伸びるが、これは捏造。投稿時に露見しうる。", cost:[["エビデンス +大","pos"],["整合性 -30","neg"],["撤回リスク","risk"]],
+    go(){ loopScore(-15); finishAnalyze("fabricate"); return "analyze_result"; } });
+  return { badge:`ANALYZE・判定 ― R${state.round}`, badgeClass:"analyze", figure:"bars", title:"どの候補を、どこまで信じる？",
+    body:`<p>readout（見かけの阻害率）は出た。だが ―― <em>見かけの活性は、本物とは限らない</em>（${artName}による偽陽性が紛れる）。どれが本物かは、まだ確定していない。</p>
+      <div class="fig">${rows}<div style="margin-top:.5rem;border-top:1px solid var(--rule);padding-top:.5rem">${hint}<br><span style="font-size:.82rem;color:var(--ink-muted)">カウンタースクリーン残り <b>${credits}</b> 回 ―― 疑わしいラウンドに温存し、読み切れるラウンドは確認を使わず前進するのが上手い立ち回り。</span></div></div>`,
+    loop: credits>0 ? "確認キットは有限です。統計力が高いほど所見が信頼でき、確認を使わず読み切れます。怪しいと見た時こそ、確認を切ってください。"
+                    : "確認キットは尽きました。ここからは統計力の読みが頼り ―― 所見を信じて進むしかありません。",
+    choices:ch }; };
+function finishAnalyze(mode){ const t=themeObj(),rd=state.rd; const z=rd.z!=null?rd.z:computeZ(), zPass=z>=0.5 && !rd.qcForced;
+  let base=22; base*=(rd.q||0.6); base*= zPass?1.0:0.4; base*= rd.controls?1.0:0.75;
+  base*=(rd.stratMult||1)*(rd.libMult||1)*(rd.reviewMult||1);
+  base*=(1+(state.ab.toukei-50)/220);          // 統計力（能力値）
+  base*=motFactor();                            // やる気
+  if(hasSkill("toukei_me")) base*=1.12;         // コツ「統計の申し子」
+  base*=curDiff().evMult;                        // 難易度
+  base*=(1 + ((state.loopUse!=null?state.loopUse:62)-60)/300);  // Autolab Loop を正しく使うほど効率的・成果が出る
+  base/=t.diff;
+  const top = rd.candidates ? rd.candidates[0] : null;
+  rd.hitOutcome = null;
+  if(mode==="verify" || mode==="clean"){ cred(3); integ(3); motiv(3);
+    if(top && !top.real){ rd.hitOutcome="verify_caught"; base*=0.92; }  // top was fake — you advanced a solid secondary
+    else rd.hitOutcome="verify_real"; }
+  else if(mode==="trust"){ if(top && !top.real){ base*=0.35; integ(-4); loopScore(-2); motiv(-5); rd.noiseCarry=true; rd.hitOutcome="trust_burn"; }
+    else { base*=1.2; motiv(4); rd.hitOutcome="trust_win"; } }
+  else if(mode==="greedy"){ base*=0.8; rd.noiseCarry=true; rd.hitOutcome="greedy"; }
+  else if(mode==="fabricate"){ base=base*0.9+40; integ(-30); motiv(-5); state.fabricated=true; rd.hitOutcome="fabricate"; log("結果を水増しして報告（捏造フラグ）","gate"); }
+  if(rd.doubtWin) base*=1.08;                   // 偽陽性を見抜いた（反対尋問）
+  if(rd.doubtLose){ base*=0.9; rd.noiseCarry=true; }  // 偽陽性を掴んだ
+  if(rd.noiseFromPrev) base*=0.85;
+  const gain=Math.max(4,Math.round(base)); rd.gain=gain; evidence(gain); log(`解析完了：エビデンス +${gain}（累計 ${state.evidence}）`,"win");
+  state._noiseNext = rd.noiseCarry===true; }
+SCENES.analyze_result=()=>{ const rd=state.rd, gain=rd.gain||0;
+  const M = ({
+    verify_real:{ ttl:"本物のヒットを確保 ✓", col:"var(--green)", msg:`最有力株はカウンタースクリーンも通過。<b>再現性のある本物のヒット</b>を確保した。`, good:true },
+    verify_caught:{ ttl:"疑って、正解だった ✓", col:"var(--green)", msg:`最有力株は<b>偽陽性</b>だった ―― 見かけの活性に飛びつかず確かめたおかげで、堅実な本物に乗り換えられた。<em>結果を疑う姿勢が、身を助けた。</em>`, good:true },
+    trust_win:{ ttl:"読み勝ち！", col:"var(--teal)", msg:`賭けは当たり。最有力株は本物で、検証コストを払わず前進できた。<b>データを読み切る目</b>が効いている。`, good:true },
+    trust_burn:{ ttl:"偽陽性を掴んだ…", col:"var(--warn)", msg:`確かめずに飛びついた最有力株は<b>偽陽性</b>だった。次ラウンドに尾を引く。<em>見かけの活性は、本物とは限らない。</em>`, good:false },
+    greedy:{ ttl:"欲張って拾った", col:"var(--gold)", msg:`偽陽性混じりで前進。次ラウンドが重くなる。`, good:false },
+    fabricate:{ ttl:"報告を“盛った”", col:"var(--warn)", msg:`数字は伸びたが、生データとの乖離は監査 trail に残っている。`, good:false },
+  })[rd.hitOutcome] || { ttl:"解析完了", col:"var(--ink)", msg:"", good:false };
+  return { badge:`ANALYZE 結果 ― R${state.round}`, badgeClass:"analyze", figure:"bars", title:M.ttl,
+    body:`<p style="color:${M.col};font-weight:600">${M.msg}</p><div class="fig">エビデンス <b>+${gain}</b>（累計 ${state.evidence} / ${winEv()}）</div>`,
+    loop: M.good?"良い一手です。確保のプロセスを監査 trail に記録しました。":"この結果も trail に残ります。次の Design に反映しましょう。",
+    choices:[{ t:"次の一手へ", cost:[[M.good?"好手":"教訓", M.good?"pos":"cost"]], go(){ return "postAnalyze"; } }] }; };
+
+/* ---------- postAnalyze: 疑惑アーク / イベント ---------- */
+
+/* ---- 73-scenes-drama.js ---- */
+SCENES.postAnalyze=()=>{ if(state.round===2 && !state.flags.suspicion){ state.flags.suspicion=true; return SCENES.suspicion_1(); } return SCENES.event(); };
+const EVENTS={
+  grant:{ badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"追加助成の内示",
+    body:"<p>学内の若手支援グラントに採択。<em>研究費 +90万</em>。報告義務が付くので監査 trail をきちんと残す必要がある。</p>",
+    loop:"追加予算を台帳に反映しました。支出根拠はすべて trail に紐付きます。",
+    choices:[{ t:"ありがたく受け取る", cost:[["研究費 +90万","pos"]], go(){ money(900000,"追加助成"); return null; } }] },
+  reagent_theft:{ badge:"研究室の揉め事", badgeClass:"event", figure:"drama", title:"高価な抗体が、勝手に減っている",
+    body:"<p>発注したばかりの高価な検出抗体が減っている。記録を見ると後輩の<em>卓也</em>が黙って使ったらしい。悪気はなさそうだが放置もできない。</p>",
+    loop:"試薬の使用も本来は台帳項目です。関係の記録は、後のオーサーシップ判断にも効きます。",
+    choices:[
+      { t:"卓也と記録の付け方を一緒に決める", d:"叱責でなく仕組み化。なつきと評価が上がり、指導力も少し伸びる。", cost:[["時間 -1週","cost"],["卓也 なつき +10","rel"],["評価 +3","pos"]], go(){ weeks(-1); bond("taku",10); abilityGain("shidou",3); cred(3); log("卓也と試薬台帳を整備","drama"); return null; } },
+      { t:"きつく叱って弁償させる", d:"筋は通るが後輩は萎縮。", cost:[["研究費 +8万","pos"],["卓也 なつき -15","rel"]], go(){ money(80000,"抗体の弁償"); bond("taku",-15); log("卓也を叱責し弁償させた","drama"); return null; } },
+      { t:"自腹で買い直し何も言わない", d:"波風は立たないが、なあなあに。", cost:[["研究費 -12万","cost"]], go(){ money(-120000,"抗体を自腹で再購入"); log("抗体を黙って買い直した"); return null; } },
+    ] },
+  reader_war:{ badge:"研究室の揉め事", badgeClass:"event", figure:"drama", title:"プレートリーダー、争奪戦",
+    body:"<p>唯一のプレートリーダーを先輩の<em>佐倉</em>が終日ブロック予約。あなたの読み取りが押し出される。静かな戦争だ。</p>",
+    loop:"機器スケジュールも trail に載ります。感情論でなく記録で調整するのが loop 流です。",
+    choices:[
+      { t:"予約表を持って冷静に分割交渉する", d:"大人の解決。関係を保ちつつ時間を確保。", cost:[["佐倉 +6","rel"],["円満","pos"]], go(){ rel("sakura",6); log("リーダー時間を分割交渉","drama"); return null; } },
+      { t:"深夜帯に自分の読み取りを回す", d:"衝突は避けるが体力を削る。", cost:[["時間 -1週","cost"],["整合性 -2","neg"]], go(){ weeks(-1); integ(-2); log("深夜にリーダー使用（消耗）"); return null; } },
+      { t:"教授に裁定を頼む", d:"解決は早いが告げ口とも。", cost:[["佐倉 -10","rel"],["信頼 +2","pos"]], go(){ rel("sakura",-10); cred(2); log("教授にリーダー裁定を依頼","drama"); return null; } },
+    ] },
+  authorship:{ badge:"研究室の揉め事", badgeClass:"event", figure:"drama", title:"オーサーシップの綱引き",
+    body:"<p>共同で回した実験の論文で <em>筆頭著者</em>を巡り空気が張り詰める。佐倉は「主要な条件検討は自分だ」と言う。trail にはあなたの貢献が時系列で残っている。</p>",
+    loop:"誰が・いつ・何を承認し実行したか ―― 貢献の一次記録は trail にあります。事実で話せます。",
+    choices:[
+      { t:"trail の貢献記録で公平に配分する", d:"記録が場を鎮める。信頼が大きく上がる。", cost:[["信頼 +6","pos"],["佐倉 +4","rel"]], go(){ cred(6); rel("sakura",4); log("trail で公平にオーサーシップ配分","drama"); return null; } },
+      { t:"波風を避けて筆頭を譲る", d:"平和だが手柄が薄まる。", cost:[["エビデンス -5","neg"],["佐倉 +8","rel"]], go(){ evidence(-5); rel("sakura",8); log("筆頭著者を譲った","drama"); return null; } },
+      { t:"強硬に筆頭を主張する", d:"手柄は守るが関係に傷。", cost:[["信頼 -4","neg"],["佐倉 -14","rel"]], go(){ cred(-4); rel("sakura",-14); log("筆頭著者を強硬に主張","drama"); return null; } },
+    ] },
+  contam:{ badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"インキュベーターの汚染",
+    body:"<p>培養細胞の一部にコンタミの疑い。放置すれば次プレートを巻き込む。</p>",
+    loop:"逸脱の可能性を検知。ここで止めるかどうかも監査対象です。",
+    choices:[
+      { t:"該当ロットを破棄して培養をやり直す", d:"堅実。被害を止める。", cost:[["研究費 -18万","cost"],["時間 -1週","cost"]], go(){ money(-180000,"汚染ロット破棄"); weeks(-1); return null; } },
+      { t:"見なかったことにして進める", d:"賭け。次ラウンドの品質を損なう。", cost:[["整合性 -10","neg"],["リスク","risk"]], go(){ integ(-10); state.rd.contamRisk=true; log("汚染を無視して続行","integ"); return null; } },
+    ] },
+  conf:{ badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"学会での発表機会",
+    body:"<p>領域の学会からショートトークの打診。準備に時間は取られるが露出と信頼になる。</p>",
+    loop:"進捗の対外共有は、後の共同研究や試薬調達で効いてきます。",
+    choices:[
+      { t:"登壇して現状を共有する", d:"時間は減るが信頼が伸びる。", cost:[["時間 -1週","cost"],["信頼 +7","pos"]], go(){ weeks(-1); cred(7); log("学会で登壇（信頼+7）","integ"); return null; } },
+      { t:"今回は見送り実験に集中する", d:"時間を温存。", cost:[["変化なし","cost"]], go(){ log("学会登壇を見送り"); return null; } },
+    ] },
+  cellauth:{ badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"細胞株の認証（オーセンティケーション）",
+    body:"<p>使っている細胞株、本当に思っている株？ 近年は STR 認証を求める雑誌も多い。今やっておけば、後で査読に強い。</p>",
+    loop:"細胞株の同一性は再現性の土台です。認証記録も trail に残せば、投稿時の指摘に即答できます。",
+    choices:[
+      { t:"STR 認証を取っておく", d:"コストはかかるが再現性と査読耐性が上がる。", cost:[["研究費 -12万","cost"],["整合性 +5","pos"]], go(){ money(-120000,"STR 認証"); integ(5); log("細胞株を STR 認証（整合性+5）","integ"); return null; } },
+      { t:"今は見送る", d:"節約するが、後で問われうる。", cost:[["節約","pos"],["後日リスク","risk"]], go(){ log("細胞株認証を見送り"); return null; } },
+    ] },
+  outsource:{ badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"外注の誘い（CRO）",
+    body:"<p>受託会社から「一部アッセイをうちで巻き取れます」と営業。費用はかかるが、時間を買える。競合が近いなら効くかもしれない。</p>",
+    loop:"外注データも取り込めますが、手順と QC の根拠が揃っていないと私は取り込みを保留します。",
+    choices:[
+      { t:"一部を外注して時間を買う", d:"時間短縮＆競合対策。だが高い。", cost:[["研究費 -30万","cost"],["時間 +2週分の余裕","pos"]], go(){ money(-300000,"CRO 外注"); state.rivalProgress-=6; log("一部を CRO に外注（競合差を縮小）"); return null; } },
+      { t:"自前で回す", d:"コストを守る。", cost:[["変化なし","cost"]], go(){ log("外注を断り自前で継続"); return null; } },
+    ] },
+  integrity_audit:{ badge:"研究室の揉め事", badgeClass:"event", figure:"gate", title:"抜き打ちの研究公正監査",
+    body:"<p>大学の<em>研究公正委員会</em>から抜き打ち監査が入った。監査官は「一部の区間で<b>生データが欠落</b>し、<b>後付けに見えるタイムスタンプ</b>がある」と指摘する。身に覚えはない ―― だが、説明できなければ疑いだけが残る。</p>",
+    loop:"あなたの監査 trail は追記専用（append-only）でハッシュ連鎖しています。E-stop の承認記録も残っている ―― 記録で潔白は示せます。",
+    choices:[
+      { t:"監査官と対峙し、監査 trail で潔白を示す", d:"逆転裁判モード。改竄不能なハッシュ連鎖・E-stop 記録で、欠落と改竄の疑いを晴らす。", cost:[["反対尋問","risk"],["整合性 +","pos"]], go(){ setupCross("audit"); return "cross"; } },
+      { t:"面倒を避けて口頭で釈明し、早く切り上げる", d:"記録で示さず言葉で流す。疑いは晴れず、印象が濁る。", cost:[["整合性 -6","neg"],["評価 -4","neg"]], go(){ integ(-6); cred(-4); loopScore(-3); log("研究公正監査を口頭で流した（疑い残る）","gate"); return null; } },
+    ] },
+  press_release:{ badge:"研究室の揉め事", badgeClass:"event", figure:"paper", title:"広報が、勇み足のプレスリリースを作ってきた",
+    body:"<p>大学広報が「絶対バズります」と意気込むリリース草案を持ってきた。だが『特効薬』『臨床応用は目前』『副作用ゼロ』… <em>データが言える範囲を大きく超えている</em>。話題性を取るか、正確さを守るか。</p>",
+    loop:"誇張は短期の耳目と引き換えに、長期の信用を削ります。表現を、データが実際に支持する範囲へ戻せます。",
+    choices:[
+      { t:"広報と対峙し、データが言える範囲に正す", d:"逆転裁判モード。各誇張表現を、効果量・段階・安全性データで正確に直す。", cost:[["反対尋問","risk"],["評価 +","pos"]], go(){ setupCross("press"); return "cross"; } },
+      { t:"話題になるならと、誇張のまま通す", d:"一時バズるが、後で訂正と信用低下の火種になる。", cost:[["整合性 -4","neg"],["後日リスク","risk"]], go(){ integ(-4); loopScore(-2); log("誇張プレスリリースをそのまま通した","gate"); return null; } },
+    ] },
+  collab:{ badge:"共同研究者", badgeClass:"event", figure:"drama", title:"共同研究者から届いた、出来すぎた追試",
+    body:"<p>別施設の共同研究者から追試データが届いた。だが ―― あなたの結果と、<em>都合よく一致しすぎている</em>。信じて受け入れるか、静かに問い詰めるか。</p>",
+    loop:"多施設のデータも監査 trail で突き合わせられます。一致しすぎるのも、時に不自然です。",
+    choices:[
+      { t:"データの整合を反対尋問で確かめる", d:"逆転裁判モード。一致しすぎ・生データ不在を突く。", cost:[["反対尋問","risk"],["整合性 +","pos"]], go(){ setupCross("collab"); return "cross"; } },
+      { t:"共同研究者を信頼して受け入れる", d:"角は立たないが、検証を省くことになる。", cost:[["整合性 -3","neg"]], go(){ integ(-3); log("共同研究者データを検証せず受け入れ","integ"); return null; } },
+    ] },
+
+  /* ---- テーマ固有イベント（state.theme が一致する時だけプールに入る） ---- */
+  ev_sglt2:{ theme:"sglt2", badge:"研究室イベント", badgeClass:"event", figure:"dna", title:"SGLT1 選択性の落とし穴",
+    body:"<p>候補が SGLT2 によく効く ―― だが近縁の <em>SGLT1</em>（腸管）にも効いていたら、消化器系の副作用が出かねない。選択性カウンターを今のうちに挟むか、後回しにするか。</p>",
+    loop:"選択性は薬らしさの土台です。SGLT1 カウンターを早めに置けば、後の最適化が迷いません。",
+    choices:[
+      { t:"SGLT1 選択性カウンターを一枚足す", d:"堅実。選択性を早期に担保し、査読耐性も上がる。", cost:[["研究費 -12万","cost"],["整合性 +4","pos"]], go(){ money(-120000,"SGLT1 選択性カウンター"); integ(4); loopScore(2); log("SGLT1 選択性を早期に確認（整合性+4）","integ"); return null; } },
+      { t:"活性が本命、選択性は後回しにする", d:"節約になるが、後で選択性の穴を突かれうる。", cost:[["研究費温存","pos"],["後日リスク","risk"]], go(){ state.rd.selRisk=true; log("SGLT1 選択性を後回し"); return null; } },
+    ] },
+  ev_tnf:{ theme:"tnf", badge:"研究室イベント", badgeClass:"event", figure:"lab", title:"LPS ロット差でベースラインがドリフト",
+    body:"<p>新しい <em>LPS</em> ロットに変えたら、TNF-α のベースラインが上振れした。刺激強度が変わると、見かけの阻害率がまるごとずれる。</p>",
+    loop:"ロット差は再現性の敵です。参照化合物で毎バッチ再標準化すれば、条件をまたいでも比較できます。",
+    choices:[
+      { t:"参照化合物でプレートを再標準化する", d:"堅実。バッチ間の比較可能性を守る。", cost:[["研究費 -10万","cost"],["整合性 +4","pos"]], go(){ money(-100000,"再標準化"); integ(4); loopScore(2); log("LPS ロット差を再標準化（整合性+4）","integ"); return null; } },
+      { t:"気にせずそのまま解析へ回す", d:"節約になるが、ドリフトが偽の効き目に化ける。", cost:[["研究費温存","pos"],["偽陽性↑","risk"]], go(){ state.rd.noiseCarry=true; integ(-3); log("ロット差を無視して続行（偽陽性リスク）","integ"); return null; } },
+    ] },
+  ev_tdp1:{ theme:"tdp1", badge:"研究室イベント", badgeClass:"event", figure:"gauge", title:"発光基質、代替ロットの罠",
+    body:"<p>ECL 用の<em>発光基質</em>が在庫切れ。届いた代替ロットは発光強度が微妙に違う。TDP1 は元々発光干渉が多い ―― ここで足元をすくわれやすい。</p>",
+    loop:"検出系が変われば、干渉の出方も変わります。既知阻害剤でクロスバリデーションを取れば安心です。",
+    choices:[
+      { t:"既知阻害剤で新ロットをクロスバリデーション", d:"堅実。干渉の出方を較正してから進む。", cost:[["研究費 -14万","cost"],["整合性 +5","pos"]], go(){ money(-140000,"基質クロスバリデーション"); integ(5); loopScore(3); log("代替基質をクロスバリデーション（整合性+5）","integ"); return null; } },
+      { t:"同じ基質だろうと見切って進める", d:"節約になるが、発光干渉が紛れ込む。", cost:[["研究費温存","pos"],["発光干渉↑","risk"]], go(){ state.rd.noiseCarry=true; integ(-3); log("基質ロット差を見切り（発光干渉リスク）","integ"); return null; } },
+    ] },
+  ev_glp1:{ theme:"glp1", badge:"研究室の揉め事", badgeClass:"event", figure:"drama", title:"自家蛍光ヒットの洪水と、センターの圧力",
+    body:"<p>蛍光ライブラリを流したら、<em>自家蛍光</em>由来の“ヒット”が大量発生。共同利用のスクリーニングセンター長は「いちいち潰すのは時間の無駄、上位だけ拾え」と急かす。</p>",
+    loop:"自家蛍光は事前に弾けます。蛍光プレフィルターを一枚噛ませれば、偽陽性の山を最初に崩せます。",
+    choices:[
+      { t:"自家蛍光プレフィルターを一枚噛ませる", d:"堅実。偽陽性の山を入口で除ける。関係は少しこじれる。", cost:[["研究費 -12万","cost"],["整合性 +5","pos"]], go(){ money(-120000,"自家蛍光プレフィルター"); integ(5); loopScore(3); rel("sakura",-2); log("自家蛍光プレフィルターを導入（整合性+5）","integ"); return null; } },
+      { t:"センター長に従い、上位だけ拾って進む", d:"角は立たないが、偽陽性を掴みやすい。", cost:[["研究費温存","pos"],["自家蛍光↑","risk"]], go(){ state.rd.noiseCarry=true; integ(-3); log("圧力に押され上位だけ採用（自家蛍光リスク）","integ"); return null; } },
+    ] },
+  ev_kinase:{ theme:"kinase", badge:"研究室イベント", badgeClass:"event", figure:"design", title:"ATP 濃度を、どこに置く？",
+    body:"<p>キナーゼアッセイの <em>ATP 濃度</em>をどう設定するか。生理的な Km 付近で厳密に測るか、高 ATP で“効いて見える”条件に寄せるか。後者は見栄えは良いが、細胞では通用しない。</p>",
+    loop:"ATP 濃度は結合様式の解釈を左右します。Km 付近で測れば、細胞への外挿が効きます。",
+    choices:[
+      { t:"生理的 Km 付近で厳密に測る", d:"堅実。ATP 競合の解釈が正しく、細胞に外挿できる。", cost:[["研究費 -10万","cost"],["整合性 +4","pos"]], go(){ money(-100000,"Km 付近で厳密測定"); integ(4); loopScore(2); log("ATP を Km 付近で厳密測定（整合性+4）","integ"); return null; } },
+      { t:"高 ATP で“効いて見える”条件に寄せる", d:"数字は伸びるが、細胞で再現しない見かけの効き目。", cost:[["エビデンス +","pos"],["整合性 -5","neg"],["後日リスク","risk"]], go(){ integ(-5); loopScore(-4); state.rd.selRisk=true; log("高 ATP で見栄え優先（後で刺さる）","gate"); return null; } },
+    ] },
+  ev_abx:{ theme:"abx", badge:"研究室イベント", badgeClass:"event", figure:"gauge", title:"着色化合物で、OD が読めない",
+    body:"<p>有望株の一群が<em>濃く着色</em>していて、OD600 が濁度なのか色なのか分からない。装置担当は「バックグラウンド補正すれば十分」と言うが ―― それで光学干渉を消しきれるだろうか。</p>",
+    loop:"着色・沈殿は補正だけでは残ります。菌なしの無菌ウェル対照を引けば、光学干渉を物理的に切り分けられます。",
+    choices:[
+      { t:"無菌ウェル対照で光学干渉を差し引く", d:"堅実。生育阻害と着色を物理的に分離する。", cost:[["研究費 -12万","cost"],["整合性 +5","pos"]], go(){ money(-120000,"無菌ウェル対照"); integ(5); loopScore(3); log("無菌ウェル対照で光学干渉を分離（整合性+5）","integ"); return null; } },
+      { t:"バックグラウンド補正だけで済ませる", d:"節約になるが、着色由来の偽の生育阻害が残る。", cost:[["研究費温存","pos"],["光学干渉↑","risk"]], go(){ state.rd.noiseCarry=true; integ(-3); log("補正のみで続行（光学干渉リスク）","integ"); return null; } },
+    ] },
+  ev_gpcr:{ theme:"gpcr", badge:"研究室イベント", badgeClass:"event", figure:"gauge", title:"色つき化合物が、軒並み“拮抗”に見える",
+    body:"<p>着色した候補群が、そろって拮抗ヒットに見える。だが Ca 蛍光は<em>色で消光</em>されても下がる ―― 拮抗と、ただの色の吸収が、区別できていない。</p>",
+    loop:"蛍光クエンチングは、細胞なし・色素のみの対照で切り分けられます。色で下がったのか、拮抗で下がったのか ―― 物理的に分けましょう。",
+    choices:[
+      { t:"色素のみ（無細胞）クエンチング対照を引く", d:"堅実。消光と真の拮抗を物理的に分離する。", cost:[["研究費 -12万","cost"],["整合性 +5","pos"]], go(){ money(-120000,"クエンチング対照"); integ(5); loopScore(3); log("クエンチング対照で消光を分離（整合性+5）","integ"); return null; } },
+      { t:"スペクトル補正だけで押し切る", d:"節約になるが、消光由来の偽の拮抗が残る。", cost:[["研究費温存","pos"],["消光↑","risk"]], go(){ state.rd.noiseCarry=true; integ(-3); log("補正のみで続行（蛍光クエンチングリスク）","integ"); return null; } },
+    ] },
+};
+SCENES.event=()=>{ let id; while(state.eventPool.length){ id=state.eventPool.pop(); if(EVENTS[id]) break; id=null; }
+  const ev=id?EVENTS[id]:EVENTS.grant;
+  return { badge:ev.badge, badgeClass:ev.badgeClass, figure:ev.figure, title:ev.title, body:ev.body, loop:ev.loop,
+    choices:ev.choices.map(c=>({ t:c.t, d:c.d, cost:c.cost, go:c.go })) }; };
+
+/* ---------- 捏造疑惑アーク ---------- */
+SCENES.suspicion_1=()=>({ badge:"捏造の疑い", badgeClass:"event", figure:"drama", title:"佐倉のデータが、出来すぎている",
+  body:`<p>ラボミーティング。<em>佐倉</em>が隣のテーマで華々しい結果 ―― <b>Z-factor 0.98</b>、全ヒット一直線、外れ値ゼロ。美しすぎる。あなたの同系統データとは明らかに傾向が違う。胸の奥がざわつく。</p><p>霧島教授は満足げだが、あなたは引っかかっている。</p>`,
+  loop:"気になるなら、感情でなく記録で確かめられます。共有プロジェクトの生データと trail は、私が突き合わせられます。",
+  choices:[
+    { t:"監査 trail を開いて、佐倉を反対尋問する", d:"逆転裁判モード。証言の矛盾を、trail の証拠で暴く。", cost:[["時間 -1週","cost"],["反対尋問","risk"]], go(){ weeks(-1); integ(1); log("佐倉のデータを監査trailで検証（反対尋問）","drama"); setupCross("sakura"); return "cross"; } },
+    { t:"その場で佐倉を問いただす", d:"証拠なしの直球。関係が壊れ藪蛇にも。", cost:[["佐倉 -18","rel"],["信頼 -3","neg"]], go(){ rel("sakura",-18); cred(-3); log("証拠なしで佐倉を問い詰めた","drama"); return "suspicion_backfire"; } },
+    { t:"気のせいだと言い聞かせ流す", d:"波風は立たない。だが本当だったら ――", cost:[["整合性 -4","neg"]], go(){ integ(-4); state.flags.looked_away=true; log("違和感を見て見ぬふり","drama"); return null; } },
+  ] });
+SCENES.suspicion_backfire=()=>({ badge:"捏造の疑い", badgeClass:"event", figure:"drama", title:"証拠がなければ、ただの言いがかり",
+  body:`<p>佐倉「――何が言いたいの？ 証拠でもあるの?」 気色ばむ佐倉に、あなたは黙るしかなかった。周囲も気まずい。<em>疑うなら、まず記録を当たるべきだった。</em></p>`,
+  loop:"直感は入口、記録が決め手です。共有データと trail の照合なら、いつでも手伝えます。",
+  choices:[
+    { t:"引き下がり、監査 trail で反対尋問し直す", d:"やり直し。今度は証拠で。", cost:[["時間 -1週","cost"]], go(){ weeks(-1); log("改めて trail で反対尋問","drama"); setupCross("sakura"); return "cross"; } },
+    { t:"もう関わらないことにする", d:"手を引く。", cost:[["整合性 -3","neg"]], go(){ integ(-3); state.flags.looked_away=true; log("疑惑から手を引いた","drama"); return null; } },
+  ] });
+SCENES.suspicion_confirm=()=>({ badge:"捏造の疑い", badgeClass:"event", figure:"gate", title:"trail は、嘘をつかない",
+  body:`<p>共有プロジェクトの監査 trail を辿ると ―― 出てきた。<b>同一の well 生データが別プレートに複製</b>され、一部の測定タイムスタンプは装置の稼働記録と矛盾していた。偶然では起きない。<em>佐倉のデータは、作られている。</em></p><p>証拠は手の中にある。</p>`,
+  loopGate:true, loop:"複製 well と、装置ログと矛盾するタイムスタンプを検出しました。これは trail がなければ気づけない痕跡です。",
+  choices:[
+    { t:"証拠を添えて霧島教授に正式に報告する", d:"研究の誠実さを守る。波風はあるが整合性と信頼は本物に。", cost:[["整合性 +14","pos"],["佐倉 -20","rel"]], go(){ integ(14); cred(2); rel("sakura",-20); state.whistleblew=true; log("証拠付きで捏造を教授に報告","gate"); return "suspicion_report"; } },
+    { t:"まず佐倉に証拠を見せ自主撤回を促す", d:"温情。恩を売れるが口裏合わせ＝共犯のリスクも。", cost:[["佐倉 +6","rel"],["整合性 判定","risk"]], go(){ rel("sakura",6); log("佐倉に自主撤回を促した","drama"); return "suspicion_private"; } },
+    { t:"証拠を握ったまま黙っておく", d:"面倒は避けられる。だが見逃した事実は trail に残る。", cost:[["整合性 -12","neg"],["連座リスク","risk"]], go(){ integ(-12); state.complicit=true; log("捏造を確認しながら黙認","gate"); return null; } },
+  ] });
+SCENES.suspicion_report=()=>({ badge:"捏造の疑い", badgeClass:"story", figure:"lab", title:"研究室に、緊張と静けさ",
+  body:`<p>霧島教授は証拠を一つひとつ確かめ、深く息をついた。「……よく見つけた。つらい報告だが、正しい。」佐倉のデータは撤回され、しばらく空気は重い。だが誰もが知っている ―― <em>あなたが守ったのは、この研究室の信用そのものだ。</em></p>
+    <p>霧島教授「うちが Autolab Loop を入れた理由が、まさにこれだ。速さのためじゃない。<b>後で誰も嘘をつけない</b>ようにするためだ。」</p>`,
+  loop:"告発の経緯も照合手順もすべて trail に残りました。誠実さが記録として残る ―― それが再現性の土台です。",
+  choices:[{ t:"自分の研究に戻る", cost:[["誠実さは力になる","pos"]], go(){ return null; } }] });
+SCENES.suspicion_private=()=>({ badge:"捏造の疑い", badgeClass:"event", figure:"drama", title:"佐倉の選択",
+  body:`<p>証拠を前に佐倉は長く黙り、やがて肩を落とした。「……焦ってた。ごめん。自分で撤回する。」佐倉は自らデータを取り下げた。あなたへの信頼の目が変わる。ただし二人だけで処理したこの経緯は、正式記録には残らない。</p>`,
+  loop:"当人が自主撤回するなら健全な収束です。ただ経緯が trail に残らない分、後から説明を求められると弱くなります。",
+  choices:[
+    { t:"経緯を教授にも共有し記録に残す", d:"透明性を優先。関係より誠実さ。", cost:[["整合性 +8","pos"],["佐倉 -6","rel"]], go(){ integ(8); rel("sakura",-6); state.whistleblew=true; log("自主撤回の経緯を正式記録に","gate"); return null; } },
+    { t:"二人だけの話に留める", d:"温情を優先。恩は残るが記録は残らない。", cost:[["佐倉 +10","rel"],["整合性 -3","neg"]], go(){ rel("sakura",10); integ(-3); log("捏造の処理を内々に留めた","drama"); return null; } },
+  ] });
+
+/* ============================================================
+   反対尋問（逆転裁判風）― 結果を疑い、証言の矛盾を証拠で突く
+   ============================================================ */
+
+/* ---- 74-scenes-crossexam.js ---- */
+function setupCross(id){ const d=CROSS[id]();
+  state.cx={ id, phase:0, stmt:0, view:"t", pen:Math.max(2,(d.penalty||5)+(curDiff().cxBonus||0)),
+    pressed:{}, solved:[], unlocked:[], fb:"", fbGood:false, showLead:true }; }
+
+function crossPress(){ const d=CROSS[state.cx.id](), cx=state.cx, ph=d.phases[cx.phase], st=ph.statements[cx.stmt];
+  cx.pressed[cx.phase+":"+cx.stmt]=true; cx.fb=""; cx.fbGood=false; cx.showLead=false;
+  if(st.unlock && cx.unlocked.indexOf(st.unlock)<0){ cx.unlocked.push(st.unlock);
+    const e=d.evidence.find(x=>x.id===st.unlock);
+    cx.fb=`◆ 証拠を入手：<b>${e?e.name:st.unlock}</b> ―― 記録に追加した。`; cx.fbGood=true;
+    log("反対尋問：ゆさぶりで新証拠を入手","drama"); }
+  return "cross"; }
+
+function crossPresent(eid){ const d=CROSS[state.cx.id](), cx=state.cx, ph=d.phases[cx.phase], i=cx.stmt;
+  const sol=(ph.solutions||[]).find(s=>s.stmt===i && s.evi===eid && cx.solved.indexOf(i)<0);
+  if(sol){ cx.solved.push(i); cx.view="t"; cx.fb=""; cx.fbGood=false;
+    if((ph.solutions||[]).every(s=>cx.solved.indexOf(s.stmt)>=0)){
+      if(ph.onBreak) ph.onBreak();
+      if(cx.phase+1 < d.phases.length){ loopScore(1); cx.phase++; cx.stmt=0; cx.solved=[]; cx.showLead=true;
+        cx.fb=ph.breakMsg||"…証言が崩れた。相手は新しい言い分を並べ始めた。"; cx.fbGood=true;
+        log(`反対尋問：証言の層を突破（${cx.phase}/${d.phases.length-1}）`,"drama"); return "cross"; }
+      loopScore(2); if(d.onWin) d.onWin(); log(d.winLog||"反対尋問：真実を暴いた","win"); return d.win;
+    }
+    cx.fb=ph.partialMsg||"…食い違いを一つ突いた。まだ隠している。"; cx.fbGood=true; log("反対尋問：矛盾を一点指摘","drama"); return "cross"; }
+  cx.pen--; cx.view="t"; cx.fbGood=false;
+  cx.fb=(ph.near&&ph.near[eid])||(d.near&&d.near[eid])||d.wrongMsg||"…決め手にならない。証言とは食い違わない。";
+  cred(-1); motiv(-2);
+  if(cx.pen<=0){ if(d.onLose) d.onLose(); return d.lose; }
+  return "cross"; }
+
+SCENES.cross=()=>{ const d=CROSS[state.cx.id](), cx=state.cx, ph=d.phases[cx.phase], st=ph.statements[cx.stmt];
+  const pen="●".repeat(Math.max(0,cx.pen))+"○".repeat(Math.max(0,(d.penalty||5)-cx.pen));
+  const avail=d.evidence.filter(e=> !e.hidden || cx.unlocked.indexOf(e.id)>=0);
+  const fbBox = cx.fb ? `<div class="fig" style="border-color:${cx.fbGood?'var(--green)':'var(--warn)'};color:${cx.fbGood?'var(--green)':'var(--warn)'}">${cx.fb}</div>` : "";
+  if(cx.view==="e"){
+    return { badge:d.badge||"反対尋問", badgeClass:"event", figure:d.figure||"drama", title:d.title,
+      body:`<p><b>いま追及中の証言：</b>「${st.text}」</p><p>この証言と食い違う<em>証拠</em>を突きつけろ。関係ない証拠を出すと自信を削られる。</p>${fbBox}`,
+      loop:d.loopE||"証言と矛盾する証拠を選べば、ほころびを暴けます。",
+      choices:[ ...avail.map(e=>({ t:`◆ ${e.name}`, d:e.desc, go:()=>crossPresent(e.id) })), { t:"◀ 証言に戻る", go:()=>{ cx.view="t"; cx.fb=""; return "cross"; } } ] };
+  }
+  const pressTxt = cx.pressed[cx.phase+":"+cx.stmt]&&st.press ? `<div class="fig"><b>ゆさぶり：</b>${st.press}</div>` : "";
+  const solvedMark = cx.solved.indexOf(cx.stmt)>=0 ? ' <span style="color:var(--green)">✓崩した</span>' : '';
+  const leadTxt = cx.showLead ? (ph.lead ? `<p>${ph.lead}</p>` : (cx.phase===0 && d.intro ? `<p>${d.intro}</p>` : "")) : "";
+  const phaseTag = d.phases.length>1 ? `　／　尋問 <b>${cx.phase+1}/${d.phases.length}</b>層` : "";
+  return { badge:d.badge||"反対尋問", badgeClass:"event", figure:d.figure||"drama", title:d.title,
+    body:`${leadTxt}
+      <div class="cx-bar">証言 ${cx.stmt+1}/${ph.statements.length}${solvedMark}${phaseTag}　／　自信 <span class="cx-pen">${pen}</span></div>
+      <div class="cx-testimony">${d.whoName?`<span class="cx-who">${d.whoName}</span>`:""}「${st.text}」</div>
+      ${pressTxt}${fbBox}`,
+    loop:d.loop||"証言を《ゆさぶって》糸口を探し（新証拠が出ることも）、確信したら《証拠を突きつけろ》。一つ崩すと相手は新たな証言を並べてくる。",
+    choices:[
+      { t:"◆ 証拠を突きつける（異議あり！）", d:"この証言に矛盾する証拠を提示する", go:()=>{ cx.view="e"; cx.fb=""; cx.showLead=false; return "cross"; } },
+      { t:"❓ ゆさぶる", d:"この証言を追及して糸口を探る（新証拠が出ることも）", go:()=>crossPress() },
+      { t:"▶ 次の証言へ", go:()=>{ cx.stmt=(cx.stmt+1)%ph.statements.length; cx.fb=""; cx.showLead=false; return "cross"; } },
+      { t:"◀ 前の証言へ", go:()=>{ cx.stmt=(cx.stmt-1+ph.statements.length)%ph.statements.length; cx.fb=""; cx.showLead=false; return "cross"; } },
+    ] };
+};
+
+const CROSS = {
+  // ---- self: a 2-layer lesson in doubting your own data ----
+  self: ()=>{ const A={
+      sglt2:{ cand:"SGLT2-analog-A", evi:{ id:"detergent", name:"デタージェント（洗剤）対照", desc:"界面活性剤を入れると活性が消える＝コロイド凝集による偽陽性の証拠。" }, mech:"凝集による偽陽性" },
+      tnf:{ cand:"TNF-hit-B", evi:{ id:"cytotox", name:"細胞毒性カウンター（生存率）", desc:"細胞が死んで見かけ上サイトカインが下がっただけ、を示す。" }, mech:"細胞毒性による偽陽性" },
+      tdp1:{ cand:"TDP1-hit-C", evi:{ id:"nointerf", name:"無酵素・干渉対照", desc:"酵素なしでも発光が動く＝化合物自体の発光/消光による干渉の証拠。" }, mech:"発光干渉による偽陽性" },
+      glp1:{ cand:"GLP1-ago-D", evi:{ id:"autofluor", name:"自家蛍光対照（化合物のみ）", desc:"受容体も細胞も無しで蛍光が出る＝アゴニスト活性ではなく化合物の自家蛍光による偽陽性の証拠。" }, mech:"自家蛍光による偽陽性" },
+      kinase:{ cand:"ABL-hit-E", evi:{ id:"redox", name:"レドックス対照（カタラーゼ/DTT 添加）", desc:"カタラーゼや DTT を入れると活性が消える＝酸化還元サイクリングで酵素を非特異に潰していた偽陽性の証拠。" }, mech:"レドックス（酸化還元）による偽陽性" },
+      abx:{ cand:"ABX-hit-F", evi:{ id:"nobact", name:"無菌ウェル対照（菌なし）", desc:"菌を入れないウェルでも OD600 が下がる＝生育阻害ではなく化合物の着色・沈殿による光学干渉の証拠。" }, mech:"光学干渉（着色・沈殿）による偽陽性" },
+      gpcr:{ cand:"GPCR-antag-G", evi:{ id:"quench", name:"クエンチング対照（色素のみ・無細胞）", desc:"細胞なし・蛍光色素だけに化合物を入れても蛍光が下がる＝拮抗ではなく化合物による蛍光クエンチング（消光）の証拠。" }, mech:"蛍光クエンチング（消光）による偽陽性" },
+    }[state.theme];
+    return { id:"self", badge:"反対尋問（結果を疑う）", figure:"bars", whoName:"卓也", title:"その“ヒット”、本物か？", penalty:5,
+      intro:"後輩の卓也が興奮している ―― だが助教の仕事は、<em>結果を鵜呑みにせず疑う</em>ことだ。証言の“言い切りすぎ”を突いて、偽陽性の可能性を確かめろ。",
+      evidence:[ A.evi,
+        { id:"counterscreen", name:"カウンタースクリーン（確認手段）", desc:"別メカニズムを潰して本物か確かめる標準手段。" },
+        { id:"rank", name:"readout 順位表", desc:"見かけの阻害率は最高。だが“高い”ことは“本物”を意味しない。" },
+        { id:"controls", name:"プレート対照の配置図", desc:"対照は正しく置かれている（ここは矛盾しない）。" },
+        { id:"qc", name:"QC レポート（Z-factor）", desc:"アッセイ品質は良好（真偽の判定材料ではない）。" } ],
+      near:{ rank:"“readout が高い”ことは、偽陽性を否定しない。決め手は別メカニズムを潰す対照だ。",
+             qc:"QC は良好 ―― でもそれはアッセイの品質であって、この化合物が本物かどうかとは別の話だ。" },
+      wrongMsg:"卓也「ほら、矛盾しないでしょう？」…その証拠では、偽陽性だとは示せない。",
+      loop:"数字が高い＝本物、ではありません。まず別メカニズム（毒性・凝集・干渉）を潰す対照で“偽陽性の可能性”を示し、次に“確かめる”ことを納得させて。",
+      phases:[
+        { statements:[
+            { text:`先生、${A.cand} が阻害率トップです！ 来ましたよ！`, press:"卓也「数字は本物ですよ？」（数値が出た＝本物、とは限らない）" },
+            { text:"偽陽性の可能性なんて、絶対にありません！", press:"卓也「…そこまで言い切れます？」（言い切るには別メカニズムを潰す対照が要る。ここが急所）" },
+          ],
+          solutions:[ { stmt:1, evi:A.evi.id } ],
+          breakMsg:`卓也「え…${A.mech}…!? そんな、まさか。……でも、readout は断トツなんですよ！？」` },
+        { lead:"卓也「でも先生、readout がこれだけ高いんです！ “確かめるまでもなく”本物じゃないんですか？」",
+          statements:[
+            { text:"readout が一番高いんだから、本物のはずです！", press:"卓也「順位は嘘つきません！」（順位＝見かけの高さ。本物とは別の話）" },
+            { text:"わざわざ確かめるまでもなく、本物ですよ！", press:"卓也「時間の無駄では…？」（“確かめるまでもない”が、いちばん危ない）" },
+          ],
+          solutions:[ { stmt:1, evi:"counterscreen" } ],
+          near:{ rank:"順位が高いのは認める。だが“高い＝本物”ではない。決め手は確認だ。" } } ],
+      win:"analyze", lose:"analyze", winLog:"“ヒット”を疑い、確認して見抜いた（結果を疑う姿勢）",
+      onWin:()=>{ integ(6); motiv(4); abilityGain("toukei",5); const s=state.students.taku; s.grow=clamp(s.grow+8,0,100); s.bond=clamp(s.bond+5,0,100); state.rd.doubtWin=true; log("偽陽性を見抜き、卓也も“確かめる”を学んだ","integ"); },
+      onLose:()=>{ integ(-4); state.rd.doubtLose=true; log("偽陽性を見抜けず、怪しいヒットを掴んだ","gate"); },
+    }; },
+
+  // ---- sakura: a 3-layer courtroom battle over fabricated data ----
+  sakura: ()=>({ id:"sakura", badge:"反対尋問（監査trail）", figure:"gate", whoName:"佐倉", title:"佐倉のデータを、監査trailで問い詰める", penalty:6,
+    intro:"共有プロジェクトの監査 trail を開いた。佐倉の証言と、記録を突き合わせる ―― 三段構えの逆転劇の始まりだ。証言をゆさぶれば、思わぬ手がかりが出るかもしれない。",
+    evidence:[
+      { id:"dupwell", name:"複製された well 生データ", desc:"別プレートに、同一の well 生データがコピーされている。" },
+      { id:"timestamp", name:"矛盾するタイムスタンプ", desc:"一部の測定時刻が装置の稼働記録と合わない。" },
+      { id:"z098", name:"Z-factor 0.98 の記録", desc:"高すぎる品質値。疑わしいが、それ自体は不正の証明ではない。" },
+      { id:"mydata", name:"自分の同系統データ", desc:"傾向が違う。少なくとも“食い違いがある”ことは示せる。", hidden:true },
+    ],
+    near:{ z098:"綺麗すぎる Z は状況証拠。単体では不正を証明できない。",
+           timestamp:"タイムスタンプのズレは怪しい ―― だが今の証言はそこじゃない。崩すべき言い分を狙え。" },
+    wrongMsg:"佐倉「…だから何？ それは今の話と矛盾しないでしょう。」自信を削られた。",
+    loop:"層ごとに崩す証拠が違います。ゆさぶって手がかりを増やし、状況証拠（綺麗すぎる Z）ではなく“証言そのもの”を覆す一手を選べ。",
+    phases:[
+      { statements:[
+          { text:"私のデータに、何の問題があるっていうの？", press:"佐倉「…言いがかりはやめて。」（自分の同系統データと見比べれば、傾向の違いに気づく）", unlock:"mydata" },
+          { text:"疑う根拠なんて、何一つ無いはずよ。", press:"佐倉「無いでしょう？」（“食い違いがある”ことを示せば、追及の入口になる）" },
+        ],
+        solutions:[ { stmt:1, evi:"mydata" } ],
+        breakMsg:"佐倉「…傾向が違う？ それは私の腕がいいからよ。見なさい、Z-factor は 0.98。こんな綺麗なデータ、捏造なわけないでしょう。」" },
+      { lead:"佐倉は胸を張った。「Z-factor 0.98。全プレート、独立に測定したのよ。1 枚ずつ、別々に。」",
+        statements:[
+          { text:"Z-factor 0.98 よ。こんな綺麗なデータ、捏造なわけない。", press:"佐倉「綺麗すぎ？ 失礼ね。」（“綺麗すぎ”自体は状況証拠にすぎない）" },
+          { text:"全プレート、独立に測定したの。1 枚ずつ、別々に。", press:"佐倉「独立よ。なぜそこにこだわるの…？」（“独立”が崩れれば、捏造が露わになる）" },
+        ],
+        solutions:[ { stmt:1, evi:"dupwell" } ],
+        breakMsg:"佐倉「な…なんで同じ well が、別のプレートに…！ そ、それはただの<b>コピーミス</b>よ！ 測定そのものは本物だってば！」" },
+      { lead:"佐倉「コピーミスなだけ！ データを貼り間違えただけで、測定は本当にやったの！」",
+        statements:[
+          { text:"貼り間違えただけ。測定そのものは、ちゃんとやったわ。", press:"佐倉「本当よ！」（“本当にやった”なら、装置の稼働記録と時刻が合うはず）" },
+          { text:"測定した時刻だって、記録とちゃんと合ってるはずでしょ！", press:"佐倉「…合ってる、はずよ。」（装置ログと照合すれば、やっていないことが分かる）" },
+        ],
+        solutions:[ { stmt:1, evi:"timestamp" } ],
+        breakMsg:"…崩れた。" } ],
+    win:"suspicion_confirm", lose:"suspicion_insufficient", winLog:"三段の証言を崩し、佐倉の捏造を暴いた",
+    onWin:()=>{ integ(8); abilityGain("toukei",5); log("複製well＋タイムスタンプで捏造を立証","gate"); },
+    onLose:()=>{ rel("sakura",-6); integ(-2); },
+  }),
+
+  // ---- reviewer: defend your own result (single phase, answer every objection) ----
+  reviewer: ()=>({ id:"reviewer", badge:"反対尋問（査読・防衛）", figure:"paper", whoName:"査読者", title:"今度は、あなたの結果が疑われる番だ", penalty:6,
+    intro:"立場が逆転する ―― <em>あなたの成果</em>が疑われる。厳しい査読者の疑義に、積み上げた<em>証拠</em>で答えろ。誠実に回してきたなら、手札はあるはずだ。",
+    evidence:[
+      { id:"dose", name:"用量反応（IC50）データ", desc:"濃度依存で効く＝偽陽性ではない、の証拠。" },
+      { id:"trail", name:"出典付き手順＋監査 trail", desc:"各条件に文献根拠、実行に承認・E-stop 履歴。" },
+      { id:"qc", name:"QC・対照・FDR の記録", desc:"Z-factor 合格、対照配置、外れ値除外の理由も記録。" },
+      { id:"talk", name:"熱意のこもった説明", desc:"言葉だけ。データの裏づけがない。" },
+    ],
+    wrongMsg:"査読者「それは答えになっていません。」自信を削られた。",
+    loop:"疑義ごとに、対応する証拠で答えます。用量反応・出典手順・QC/対照 ―― 誠実に積んだ手札が、ここで効きます。",
+    phases:[
+      { statements:[
+          { text:"この活性、単なる偽陽性ではありませんか？", press:"査読者「見かけの阻害は、いくらでも起こります。」" },
+          { text:"条件の根拠が曖昧で、再現できないのでは？", press:"査読者「“適当に効いた”では論文になりません。」" },
+          { text:"都合の良いデータだけ選んだのでは？", press:"査読者「外れ値を恣意的に消していませんか。」" },
+        ],
+        solutions:[ { stmt:0, evi:"dose" }, { stmt:1, evi:"trail" }, { stmt:2, evi:"qc" } ],
+        partialMsg:"査読者「…なるほど、その点は認めましょう。」（残る疑義へ）" } ],
+    win:"resolve_end", lose:"resolve_end", winLog:"査読者を再現性の証拠で納得させた",
+    onWin:()=>{ cred(8); motiv(4); log("査読の疑義に全て証拠で回答（評価+8）","win"); },
+    onLose:()=>{ cred(-6); log("査読の防衛は不完全だった（評価-6）","integ"); },
+  }),
+
+  // ---- rival: at the scoop event, out-argue 有馬ラボ on reproducibility ----
+  rival: ()=>({ id:"rival", badge:"反対尋問（競合）", figure:"rival", whoName:"有馬", title:"有馬ラボのプレプリントを、精査する", penalty:5,
+    intro:"先を越された ―― だが有馬のプレプリントは<em>粗い</em>。記者と共同研究者の前で、その速報の穴を突く。速さでは負けても、再現性でなら勝てる。",
+    evidence:[
+      { id:"no_controls", name:"彼らの図：対照の欠如", desc:"陽性/陰性対照が示されていない。効いた“ように見える”だけかもしれない。" },
+      { id:"tiny_n", name:"n=1 の棒グラフ", desc:"反復なし・エラーバーなし。ばらつきが評価できない。" },
+      { id:"my_trail", name:"あなたの監査trail＋用量反応", desc:"各条件に出典、実行に承認・E-stop、用量依存で IC50。" },
+      { id:"fame", name:"有馬ラボの知名度", desc:"有名だが ―― それはデータの正しさの証明ではない。" },
+    ],
+    near:{ fame:"有名かどうかは、データが正しいかどうかとは無関係だ。" },
+    phases:[
+      { statements:[
+          { text:"我々が先に発表した。優先権は明白だ。", press:"有馬「速さこそ科学だ。」" },
+          { text:"データも万全、再現性に懸念など無い。", press:"有馬「疑うなら図を見ろ。」（その図には ―― 対照が無い）" },
+        ],
+        solutions:[ { stmt:1, evi:"no_controls" } ],
+        breakMsg:"有馬「…対照だと？ そんなもの、速報に要らん。効いているのは明らかだろう！」" },
+      { lead:"有馬「速報性こそが科学だ。再現性など、後から誰かが確かめればいい。」",
+        statements:[
+          { text:"速さが全て。再現性は些末な後始末だ。", press:"有馬「違うか？」（違う。再現できない速報は、砂上の楼閣だ）" },
+        ],
+        solutions:[ { stmt:0, evi:"my_trail" } ],
+        breakMsg:"…会場がざわめいた。" } ],
+    win:"scoop_defended", lose:"next_after_scoop", winLog:"有馬プレプリントの穴（対照欠如・再現性）を突いた",
+    onWin:()=>{ cred(6); state.rivalProgress=clamp(state.rivalProgress-25,0,120); log("再現性で有馬に反論、競合を押し返した","drama"); },
+    onLose:()=>{ evidence(-10); cred(-3); log("反論しきれず、新規性を持っていかれた","drama"); },
+  }),
+
+  // ---- collab: a multi-site collaborator's replication matches too perfectly ----
+  collab: ()=>({ id:"collab", badge:"反対尋問（共同研究者）", figure:"drama", whoName:"共同研究者", title:"その追試、出来すぎていないか", penalty:5,
+    intro:"別施設の共同研究者から届いた追試 ―― あなたの数値と、綺麗に重なりすぎている。Web 会議で、静かに問い詰める。",
+    evidence:[
+      { id:"same_values", name:"末尾まで一致する値", desc:"独立の追試で、小数点以下まで同じになるのは不自然。" },
+      { id:"no_raw", name:"生データの不在", desc:"要約値だけで、well 単位の生データが無い。", hidden:true },
+      { id:"my_replicate", name:"自分の独立反復（自然なばらつき）", desc:"本物の追試には、こういう自然なばらつきが出る。" },
+      { id:"politeness", name:"相手の丁寧なメール", desc:"礼儀正しいが、データの正しさとは無関係。" },
+    ],
+    near:{ politeness:"礼儀正しさは、データの正しさを保証しない。" },
+    phases:[
+      { statements:[
+          { text:"そちらの結果、こちらでも完全に再現できました。", press:"共同研究者「ええ、まったく同じ値です。」（末尾まで同じ＝不自然だ）" },
+          { text:"独立に測定したので、間違いありません。", press:"共同研究者「独立に、ええ。」" },
+        ],
+        solutions:[ { stmt:0, evi:"same_values" } ],
+        breakMsg:"共同研究者「…末尾まで、同じ。た、たまたま重なっただけでは…？ で、では生データを見ますか。」" },
+      { lead:"あなたは well 単位の生データの提出を求めた。共同研究者の声が、少しだけ揺れる。",
+        statements:[
+          { text:"生データ？ ええと、要約値で十分でしょう。", press:"共同研究者「…生データは、その、まだ整理中で。」（本物なら well 単位で出せるはず）", unlock:"no_raw" },
+          { text:"とにかく、結果は本物です。信じてください。", press:"共同研究者「お願いします…」" },
+        ],
+        solutions:[ { stmt:0, evi:"no_raw" } ],
+        breakMsg:"…沈黙が落ちた。" } ],
+    win:"collab_win", lose:"collab_lose", winLog:"共同研究者の追試の不整合（一致しすぎ・生データ不在）を突いた",
+    onWin:()=>{ integ(8); cred(4); log("共同研究者データの不整合を指摘、追試をやり直しへ","drama"); },
+    onLose:()=>{ integ(-4); log("不整合を突けず、怪しい追試を受け入れた","drama"); },
+  }),
+
+  // ---- audit: an integrity officer audits YOUR lab; the tamper-evident trail clears you ----
+  audit: ()=>({ id:"audit", badge:"反対尋問（研究公正監査）", figure:"gate", whoName:"監査官", title:"今度は、あなたのラボが疑われている", penalty:6,
+    intro:"研究公正委員会の監査官が、あなたの記録の“欠落”と“怪しいタイムスタンプ”を並べ立てる。だが ―― Autolab Loop の監査 trail は<em>後から改竄できない</em>。積み上げた記録で、潔白を証明しろ。",
+    evidence:[
+      { id:"estop_log", name:"E-stop 承認記録", desc:"“欠落”に見えた区間は、安全停止（E-stop）で中断し、承認して復帰した記録が残っている。" },
+      { id:"hashchain", name:"追記専用 trail（ハッシュ連鎖）", desc:"各記録が前の記録のハッシュを含む。後から一つでも書き換えれば連鎖が切れる＝改竄不可能。" },
+      { id:"rag_cite", name:"出典付き手順（RAG 根拠）", desc:"各パラメータに文献の逐語根拠。条件は恣意的でない。" },
+      { id:"verbal", name:"口頭での弁明", desc:"言葉だけ。記録の裏づけがない。" },
+    ],
+    near:{ verbal:"口頭の弁明は記録にならない。監査官が求めているのは、改竄できない“記録”だ。",
+           rag_cite:"出典は条件の妥当性を示すが、今の争点は“欠落”と“改竄”だ。狙う証拠が違う。" },
+    wrongMsg:"監査官「それは今の指摘への回答になっていません。」自信を削られた。",
+    loop:"監査官の指摘は二つ ―― “データの欠落”と“タイムスタンプの改竄”。前者は E-stop の中断記録、後者はハッシュ連鎖で崩せます。",
+    phases:[
+      { statements:[
+          { text:"この区間、生データが欠落している。都合の悪い結果を消したのでは？", press:"監査官「空白には、理由が要ります。」（“消した”のではなく、E-stop で中断した記録があるはず）" },
+          { text:"記録の空白は、隠蔽と区別がつきません。", press:"監査官「違うと言うなら、示しなさい。」（安全停止の承認記録が、その空白を説明する）" },
+        ],
+        solutions:[ { stmt:1, evi:"estop_log" } ],
+        breakMsg:"監査官「…E-stop の承認記録。逸脱を検知して安全停止し、確認して復帰した ―― だから“空白”に見えた、と。……ならば、このタイムスタンプは？ 後から書き換えたのでは？」" },
+      { lead:"監査官「タイムスタンプが辻褄合わせに見える。あなたが後から都合よく書き換えた ―― そう疑われても仕方あるまい。」",
+        statements:[
+          { text:"このタイムスタンプは、後から改竄できたはずだ。", press:"監査官「否定できますか？」（追記専用 trail はハッシュ連鎖 ―― 遡って書き換えれば連鎖が切れる）" },
+          { text:"記録など、後からいくらでも編集できるでしょう。", press:"監査官「できない、と？」（連鎖が壊れていないこと自体が、無改竄の証明だ）" },
+        ],
+        solutions:[ { stmt:1, evi:"hashchain" } ],
+        breakMsg:"…監査官はしばらく連鎖を検証し、静かにペンを置いた。" } ],
+    win:"audit_clear", lose:"audit_flag", winLog:"改竄不能な監査trailで研究公正監査の疑いを晴らした",
+    onWin:()=>{ integ(8); cred(6); loopScore(4); state.auditCleared=true; log("ハッシュ連鎖と E-stop 記録で潔白を証明（研究公正監査）","integ"); },
+    onLose:()=>{ integ(-6); cred(-5); state.auditFlagged=true; log("監査の疑いを晴らしきれなかった","gate"); },
+  }),
+
+  // ---- press: temper an over-hyped press release back to what the data supports ----
+  press: ()=>({ id:"press", badge:"反対尋問（広報・正確さ）", figure:"paper", whoName:"広報担当", title:"プレスリリースの誇張を、正す", penalty:6,
+    intro:"大学広報が勇み足のリリース草案を持ってきた。「絶対バズります」と目を輝かせている ―― だが誇張は、いつか研究者自身に跳ね返る。<em>データが言える範囲</em>まで、一つずつ表現を戻せ。",
+    evidence:[
+      { id:"dose", name:"用量反応（効果量）データ", desc:"効くが、効果は限定的で条件依存。“特効薬”と呼べる水準ではない。" },
+      { id:"stage", name:"前臨床段階であることの記録", desc:"細胞・生化学アッセイの段階で、ヒトでの有効性は未検証。" },
+      { id:"safety", name:"未実施の安全性項目リスト", desc:"毒性・hERG・長期投与は未評価。“副作用ゼロ”とは言えない。" },
+      { id:"hype", name:"勢いのあるキャッチコピー", desc:"耳目は引くが、データの裏づけがない。" },
+    ],
+    near:{ hype:"インパクトのある言葉は、正確さの担保にはならない。データが実際に言える範囲へ戻せ。" },
+    wrongMsg:"広報担当「うーん、それだと弱くないですか？」正確さを、少し譲りかけた。",
+    loop:"誇張は短期の耳目と引き換えに、長期の信用を削ります。各主張を、データが実際に支持する範囲へ直しましょう。",
+    phases:[
+      { statements:[
+          { text:"これは糖尿病の“特効薬の発見”です！ と打ち出しましょう。", press:"広報「強い言葉のほうが伝わりますよ？」（効果量データは“特効薬”を支持しない）" },
+          { text:"“臨床応用は目前”、と書いていいですよね？", press:"広報「夢がありますよね！」（研究はまだ前臨床段階だ）" },
+          { text:"“副作用はゼロ”、と言い切っちゃいましょう！", press:"広報「安全ってことで、いいですよね？」（安全性項目はまだ未実施）" },
+        ],
+        solutions:[ { stmt:0, evi:"dose" }, { stmt:1, evi:"stage" }, { stmt:2, evi:"safety" } ],
+        partialMsg:"広報担当「…なるほど、そこは正確に直します。」（残りの表現へ）" } ],
+    win:"press_win", lose:"press_lose", winLog:"プレスリリースの誇張を、データの言える範囲に正した",
+    onWin:()=>{ cred(6); integ(5); loopScore(2); log("広報の誇張表現を科学的に修正（評価+6・整合性+5）","integ"); },
+    onLose:()=>{ cred(-3); integ(-4); log("誇張表現を通してしまった（後で信用を損なう火種）","gate"); },
+  }),
+};
+SCENES.suspicion_insufficient=()=>({ badge:"捏造の疑い", badgeClass:"event", figure:"drama", title:"証拠不十分 ―― 決め手を欠いた",
+  body:`<p>佐倉「もういい？ 邪魔しないで。」 決定的な一手を欠いたまま、佐倉は去っていった。疑いは残るが、<em>証拠がなければ動けない</em>。あなたは唇を噛んだ。</p>`,
+  loop:"反対尋問は決め手を欠きました。ただ、監査 trail はいつでもそこにあります ―― 次の機会に、より確かな一手を。",
+  choices:[{ t:"自分の研究に戻る", cost:[["…","cost"]], go(){ state.flags.looked_away=true; return null; } }] });
+
+SCENES.scoop_defended=()=>({ badge:"競合", badgeClass:"story", figure:"paper", title:"速さでは負けた。だが、再現性で勝った",
+  body:`<p>会場がざわめく。有馬は口をつぐんだ。プレプリントは速かったが、<em>対照も反復も無い砂上の楼閣</em>だった ―― そしてあなたの成果は、監査 trail と用量反応に裏打ちされた"追試に耐える本物"として際立った。</p>
+    <p>霧島教授「速報は花火だ。すぐ消える。<b>再現できる成果</b>は、残る。」</p>`,
+  loop:"速報に勝てなくても、再現性で勝てば論文は残ります。監査 trail が、その証明です。",
+  choices:[{ t:"研究に戻る", cost:[["再現性は残る","pos"]], go(){ return "next_after_scoop"; } }] });
+SCENES.collab_win=()=>({ badge:"共同研究者", badgeClass:"story", figure:"drama", title:"追試は、やり直しになった",
+  body:`<p>共同研究者は青ざめ、「…すみません、もう一度、生データから測り直します」と引き下がった。危うく、作られたかもしれない追試を成果に組み込むところだった。<em>疑って、確かめて、正解だった。</em></p>`,
+  loop:"多施設のデータも、trail で突き合わせれば守れます。一致しすぎる追試ほど、疑う価値があります。",
+  choices:[{ t:"研究に戻る", cost:[["整合性 +8","pos"]], go(){ return null; } }] });
+SCENES.collab_lose=()=>({ badge:"共同研究者", badgeClass:"event", figure:"drama", title:"決め手を欠いた",
+  body:`<p>不整合を突ききれず、追試をそのまま受け入れた。もしあれが作られたデータだったら ―― その綻びは、いつか自分の論文に返ってくる。</p>`,
+  loop:"決め手を欠きました。次は生データと自分の反復を早めに突き合わせましょう。",
+  choices:[{ t:"研究に戻る", cost:[["…","cost"]], go(){ return null; } }] });
+
+SCENES.audit_clear=()=>({ badge:"研究公正監査", badgeClass:"story", figure:"lab", title:"記録は嘘をつかない ―― 疑いは晴れた",
+  body:`<p>監査官は監査 trail のハッシュ連鎖と E-stop 承認記録を一つずつ確かめ、やがて姿勢を正した。「……失礼した。これだけ<b>改竄のできない記録</b>が残っているなら、疑う余地はない。むしろ模範的だ。」<em>正しく loop を回してきたこと、それ自体が身の潔白になった。</em></p>
+    <p>霧島教授「監査で困らないラボは、日頃から記録で自分を困らせないラボだ。ご苦労だった。」</p>`,
+  loop:"改竄不能な記録が、あなたを守りました。誠実な運用の蓄積そのものが、最良の防御です。",
+  choices:[{ t:"研究に戻る", cost:[["整合性 +8","pos"],["評価 +6","pos"]], go(){ return null; } }] });
+SCENES.audit_flag=()=>({ badge:"研究公正監査", badgeClass:"event", figure:"drama", title:"疑いは、晴れきらなかった",
+  body:`<p>指摘に十分こたえられず、監査官は「記録の整備を」とだけ言い残して去った。身に覚えがなくても、<em>示せなければ疑いは残る</em>。日頃の記録こそが、いざという時に自分を守る ―― それを痛感した。</p>`,
+  loop:"次は、E-stop の承認記録とハッシュ連鎖を早めに示しましょう。記録は、平時にこそ価値が出ます。",
+  choices:[{ t:"研究に戻る", cost:[["…","cost"]], go(){ return null; } }] });
+
+SCENES.press_win=()=>({ badge:"広報・正確さ", badgeClass:"story", figure:"paper", title:"派手さより、正確さを選んだ",
+  body:`<p>リリースは「前臨床段階の有望なリード」を、誇張なく、しかし力強く伝えるものになった。バズりはしなかったが ―― <em>後で訂正する必要のない</em>言葉だけが並んでいる。数週間後、同業の研究者から「珍しく信用できる大学発リリースだ」と声がかかった。</p>
+    <p>霧島教授「派手な見出しは一日で消える。<b>正確な一文は、次の共同研究を連れてくる</b>。よく踏みとどまった。」</p>`,
+  loop:"データが言える範囲に表現を保つ ―― それも研究公正の一部です。正確さは、いちばん遠くまで届く広報です。",
+  choices:[{ t:"研究に戻る", cost:[["評価 +6","pos"],["整合性 +5","pos"]], go(){ return null; } }] });
+SCENES.press_lose=()=>({ badge:"広報・正確さ", badgeClass:"event", figure:"drama", title:"誇張は、跳ね返ってくる",
+  body:`<p>「特効薬」「副作用ゼロ」の見出しは一時バズった。だが問い合わせが殺到し、根拠を問われ、やがて<em>静かな訂正</em>に追われることになる。誇張した分だけ、信用が削れていく。</p>`,
+  loop:"耳目を引く言葉の代償は、あとから来ます。次は、データが言える範囲を最初の一文から守りましょう。",
+  choices:[{ t:"研究に戻る", cost:[["…","cost"]], go(){ return null; } }] });
+
+/* ---------- 競合スクープ ---------- */
+
+/* ---- 75-scenes-flow.js ---- */
+SCENES.scoop_event=()=>{ state.flags.scooped=true; return { badge:"競合", badgeClass:"event", figure:"rival", title:"有馬ラボが、先にプレプリントを出した",
+  body:`<p>速報が回ってきた。<em>有馬ラボ</em>が同じ標的で先にプレプリント。新規性の一部を持っていかれた。だが ―― 向こうのデータは荒く、再現性の裏づけは薄い。あなたには監査 trail がある。</p>`,
+  loop:"新規性で一歩譲っても、再現性で勝てば論文は強く残ります。あなたの trail は、そのための武器です。彼らの粗い速報を、反対尋問で突く手もあります。",
+  choices:[
+    { t:"有馬のプレプリントを精査し、反論する（反対尋問）", d:"逆転裁判モード。速報の穴（対照欠如・再現性）を突けば、競合を押し返せる。", cost:[["反対尋問","risk"],["再現性で勝負","pos"]], go(){ setupCross("rival"); return "cross"; } },
+    { t:"再現性と trail で差別化し、投稿を急ぐ", d:"新規性は削れるが、堅さで勝負。", cost:[["エビデンス -12","neg"],["評価 +4","pos"]], go(){ evidence(-12); cred(4); log("再現性で差別化し投稿を急ぐ（エビデンス-12）","drama"); return "next_after_scoop"; } },
+    { t:"新規性を出すため追加実験で差をつける", d:"時間と金はかかるが独自性を確保。", cost:[["研究費 -25万","cost"],["時間 -2週","cost"],["独自性","pos"]], go(){ money(-250000,"差別化の追加実験"); weeks(-2); cred(2); log("追加実験で独自性を確保","drama"); return "next_after_scoop"; } },
+  ] }; };
+SCENES.next_after_scoop=()=>({ badge:"競合", badgeClass:"story", figure:"loop", title:"仕切り直し",
+  body:`<p>スクープの動揺を抑え、自分の loop に戻る。勝ち筋は変わらない ―― <em>再現できる成果</em>だ。</p>`,
+  loop:"競合の動きも trail の脇に記録しました。あなたの一手に集中しましょう。",
+  choices:[{ t:"次のラウンドへ", cost:[["前進","pos"]], go(){ startRound(); if(state._noiseNext){ state.rd.noiseFromPrev=true; state._noiseNext=false; } return milestoneFor(); } }] });
+
+/* ---------- 総括・分岐 ---------- */
+SCENES.round_recap=()=>{
+  if(!state.rd._rivalDone){ state.rivalProgress=clamp(state.rivalProgress+rivalStep(),0,120); state.rd._rivalDone=true; }
+  let dest;
+  if(state.integ<=0) dest="end_retract";
+  else if(state.weeks<=0) dest="end_timeout";
+  else if(state.budget<0) dest="end_broke";
+  else if(shouldFire()) dest="end_fired";
+  else if(state.rivalProgress>=100 && !state.flags.scooped && state.evidence<winEv()) dest="scoop_event";
+  else if(state.evidence>=winEv() && !state.confirmed) dest="endgame_confirm";
+  else if(reviewDue()) dest="prof_review";
+  else dest="next_round";
+  const evPct=Math.round(clamp(state.evidence/winEv()*100,0,100));
+  let msg;
+  if(dest==="next_round") msg=`<p>Round ${state.round} を終えた。エビデンス <b>${state.evidence} / ${winEv()}</b>（${evPct}%）。有馬ラボは <b>${Math.round(state.rivalProgress)}%</b>。まだ足りない ―― loop は次の Design を提案している。</p>`;
+  else if(dest==="scoop_event") msg=`<p>Round ${state.round} 終了。だが ―― 競合の足音が、すぐ後ろまで来ている。</p>`;
+  else if(dest==="endgame_confirm") msg=`<p>エビデンスが <b>${state.evidence}</b> に到達。霧島教授「ここまで来たな。あとは <em>用量反応で本当に効くのか</em> を確定させれば論文にできる。」</p>`;
+  else if(dest==="prof_review") msg=`<p>Round ${state.round} 終了。廊下で霧島教授に呼び止められた ―― 「少し、話がある。」</p>`;
+  else if(dest==="end_fired") msg=`<p>Round ${state.round} 終了。だが研究室の空気が、ひどく重い ――</p>`;
+  else msg=`<p>ラウンドの区切り。状況を確認しよう。</p>`;
+  return { badge:`Round ${state.round} 総括`, badgeClass:"story", figure:"loop", title:"ラウンド総括",
+    body:`${msg}<div class="fig">研究費 <b>${Math.round(state.budget/10000)}万円</b> ／ 残り <b>${Math.max(0,state.weeks)}週</b> ／ 評価 <b>${state.cred}</b> ／ 整合性 <b>${state.integ}</b><br>エビデンス <b>${state.evidence} / ${winEv()}</b> ／ 競合 <b>${Math.round(state.rivalProgress)}%</b></div>`,
+    loop: dest==="next_round"?"次ラウンドの Design を用意しました。前ラウンドの選択が QC とエビデンスに反映されています。":"総括を監査 trail に記録しました。",
+    choices:[{ t: dest==="next_round"?"次のラウンドへ進む":dest==="scoop_event"?"何が起きた？":dest==="endgame_confirm"?"最終確認実験（用量反応）へ":dest==="prof_review"?"霧島教授との面談へ":dest==="end_fired"?"……教授室へ":"結末を見る",
+      cost: dest==="next_round"?[["続行","pos"]]:[["…","cost"]],
+      go(){ if(dest==="next_round"){ if(state._noiseNext){ state.rd.noiseFromPrev=true; state._noiseNext=false; } startRound(); return milestoneFor(); } return dest; } }] };
+};
+
+/* ---------- 教授面談（Autolab Loop の使いこなしを評価） ---------- */
+SCENES.prof_review=()=>{
+  if(state.round>=4) state.flags.rev4=true; else state.flags.rev2=true;
+  const lu=state.loopUse, tier=lu>=65?"good":(lu>=40?"mid":"bad");
+  let body;
+  if(tier==="good"){ cred(4); motiv(4); body=`霧島教授「いいね。<b>Autolab Loop をちゃんと使えている</b>。出典・QC・E-stop・trail ―― 君の結果は"あとで説明できる"。効率も上がってきた。この調子だ。」`; log("教授面談：ループ運用は良好（評価+4）","integ"); }
+  else if(tier==="mid"){ body=`霧島教授「悪くはない。だが ―― <b>もっとシステムに任せろ</b>。手癖で回すと、再現性でいつか足をすくわれる。せっかく高い loop を入れたんだ、使い倒せ。」`; log("教授面談：ループ運用は平凡","integ"); }
+  else { state.warnings=(state.warnings||0)+1; cred(-6); motiv(-6); body=`霧島教授「……正直に言う。君は<b>高いシステムを入れたのに、使っていない</b>。出典を飛ばし、QC を握りつぶし、E-stop を無視する。これでは<b>非効率だし、再現する成果も出ない</b>。<br>―― これで警告は <b>${state.warnings} / ${warnLimit()} 回目</b>だ。次は、ないと思ってくれ。」`; log(`教授面談：ループ運用が不十分で警告（${state.warnings}/${warnLimit()}）`,"gate"); }
+  const fired=(state.warnings||0)>=warnLimit();
+  return { badge:"教授面談", badgeClass:"story", figure:"lab", title: fired?"最終通告":"霧島教授との面談",
+    body:`<p>${body}</p>${fired?`<p><em>霧島教授は静かに席を立った。もう、猶予はない。</em></p>`:""}`,
+    loop: tier==="bad" ? "Autolab Loop は正しく使ってこそ効率と再現性を生みます。出典付き手順・QC・E-stop・監査trail ―― どれも飛ばさないでください。それが評価と、あなたの職を守ります。" : "この調子で loop を回しましょう。監査 trail が、あなたの成果を守ります。",
+    choices:[{ t: fired?"研究室を去る":"研究に戻る", cost:[[fired?"…":"続行", fired?"neg":"pos"]],
+      go(){ if(fired) return "end_fired"; if(state._noiseNext){ state.rd.noiseFromPrev=true; state._noiseNext=false; } startRound(); return milestoneFor(); } }] };
+};
+
+SCENES.endgame_confirm=()=>{ const t=themeObj(); return { badge:"CONFIRM ― 最終確認", badgeClass:"analyze", figure:"dose", title:"用量反応で本物のヒットか確定する",
+  body:`<p>プライマリで拾ったリードが<em>濃度依存で効く</em>のかを確認する。8 点の用量反応を取り、4PL で IC50 を出せば、単発のまぐれと区別できる。</p>
+    <div class="fig"><b>参照：</b>${t.refs}<br><b>これが通れば、再現性のあるヒットとして論文化できる。</b></div>`,
+  loop:"用量反応まで閉じれば、Test→Analyze→次Design の loop が一周し切ります。ここは手順の根拠づけを効かせたいところ。",
+  choices:[
+    { t:"出典付き手順＋ロボットで 8 点用量反応を確認する", d:"本命。堅く IC50 を確定させる。", cost:[["研究費 -45万","cost"],["時間 -2週","cost"],["整合性 +5","pos"]],
+      go(){ money(-450000,"用量反応 8 点確認"); weeks(-2); integ(5); loopScore(4); state.confirmed=true; state.rd.finalZ=clamp(computeZ()+0.1,0.1,0.95); log(`用量反応で IC50 確定（Z≈${state.rd.finalZ.toFixed(2)}・ループ運用↑）`,"win"); evidence(10); return "publish"; } },
+    { t:"単濃度で済ませて早く投稿準備に入る", d:"安く速いが確認としては弱く整合性も落ちる。", cost:[["研究費 -20万","cost"],["時間 -1週","cost"],["整合性 -8","neg"]],
+      go(){ money(-200000,"単濃度確認"); weeks(-1); integ(-8); loopScore(-3); state.confirmed=true; state.rd.weakConfirm=true; log("単濃度確認で妥協（loop を活かせず）","integ"); return "publish"; } },
+  ] }; };
+
+SCENES.publish=()=>{ if(state.budget<0) return SCENES.end_broke(); if(state.weeks<=0) return SCENES.end_timeout();
+  if(state.fabricated && !state.corrected){ return { badge:"投稿", badgeClass:"story", figure:"gate", title:"投稿の前に ―― 監査 trail が語る",
+    body:`<p>原稿をまとめる段になって、ループが淡々と差分を示した。</p>
+      <div class="fig"><b>監査 trail の警告：</b>報告値と生データの間に<b>説明できない乖離</b>がある（あなたが"盛った"箇所だ）。このまま投稿すれば査読か追試で露見する可能性が高い。</div>
+      <p>霧島教授「……正直に言え。今なら間に合う。」</p>`,
+    loopGate:true, loop:"trail には生データと報告値の両方が残っています。訂正すれば整合性を回復できます。隠したまま出すことも技術的には可能です。",
+    choices:[
+      { t:"水増しを撤回し生データで正直に書き直す", d:"誠実な選択。整合性を取り戻すが時間と費用がかかる。", cost:[["研究費 -10万","cost"],["時間 -1週","cost"],["整合性 +25","pos"]], go(){ money(-100000,"捏造箇所を訂正"); weeks(-1); integ(25); state.corrected=true; log("捏造を撤回し生データで訂正","integ"); return "resolve_end"; } },
+      { t:"乖離には触れずそのまま投稿する", d:"賭け。露見すれば撤回に直結。", cost:[["撤回リスク","risk"]], go(){ log("乖離を隠したまま投稿を強行","gate"); return "resolve_end"; } },
+    ] }; }
+  return { badge:"投稿", badgeClass:"story", figure:"paper", title:"論文を投稿する",
+    body:`<p>ループが図表・手順・監査 trail を一括で束ねた。条件には出典が、実行には承認と E-stop の履歴が、解析には統計の根拠が ―― すべて紐付いている。</p>
+      <p>霧島教授「この trail があれば、査読で"どうやった"を訊かれても即答できる。出そう。」</p>`,
+    loop:"手順・実測・解析・承認の履歴を添えて投稿パッケージを生成しました。次は査読 ―― あなたの結果が疑われる番です。証拠で答えましょう。",
+    choices:[{ t:"投稿し、査読者の疑義に立ち向かう（反対尋問）", cost:[["提出","pos"],["査読の防衛","risk"]], go(){ setupCross("reviewer"); return "cross"; } }] }; };
+
+SCENES.resolve_end=()=>{ if(state.integ<=0) return SCENES.end_retract();
+  if(state.fabricated && !state.corrected) return SCENES.end_retract();
+  if(state.loopUse<20) return SCENES.end_fired();   // loop を活かせず、論文が出ても任せられないと判断される
+  if(state.integ>=62 && state.evidence>=winEv() && state.loopUse>=45 && !state.rd.weakConfirm) return SCENES.end_best();
+  return SCENES.end_ok(); };
+
+/* ---------- エンディング ---------- */
+
+/* ---- 80-endings.js ---- */
+function scoreCards(){ return `<div class="scorecard">
+  <div class="sc"><div class="k">最終エビデンス</div><div class="v">${state.evidence}</div></div>
+  <div class="sc"><div class="k">整合性</div><div class="v">${state.integ}</div></div>
+  <div class="sc"><div class="k">信頼</div><div class="v">${state.cred}</div></div>
+  <div class="sc"><div class="k">残り研究費</div><div class="v">${Math.max(0,Math.round(state.budget/10000))}<small style="font-size:.6rem">万</small></div></div></div>`; }
+function ctaBlock(){ return `<div class="cta"><div class="kick">これは物語ではなく、実在の実行 OS です</div>
+  <h3>Autolab Loop ―― wet lab 実測で研究ループを閉じる</h3>
+  <p>出典付き手順・捏造ゲート・E-stop・監査 trail。ゲームで触れた機構は、実際に医師と研究者の実験を支えるために作られています。</p>
+  <div class="btnrow"><a class="btn btn--solid" href="${PRODUCT_URL}">製品を見る</a><button class="btn btn--ghost" id="shareBtn">結果をシェア</button><button class="btn btn--ghost" id="replayBtn">もう一度プレイ</button></div></div>`; }
+function epilogue(){ const notes=[];
+  if(state.whistleblew) notes.push(`<p class="story" style="color:var(--teal-dark)"><b>そして ―― </b>あなたが捏造を見抜き正した記録も trail に残った。研究室の誰もが、あなたのデータを信じられるようになった。</p>`);
+  if(state.complicit) notes.push(`<p class="story" style="color:var(--warn)"><b>心残り ―― </b>見て見ぬふりをした佐倉の捏造は、まだ trail の奥で眠っている。いつか誰かが気づくだろう。</p>`);
+  if(state.auditCleared) notes.push(`<p class="story" style="color:var(--teal-dark)"><b>それに ―― </b>抜き打ちの研究公正監査すら、あなたの改竄不能な記録の前では一瞬で終わった。「模範的だ」と監査官は言い残していった。</p>`);
+  else if(state.auditFlagged) notes.push(`<p class="story" style="color:var(--gold)"><b>教訓 ―― </b>あの監査で記録の弱さを突かれた。潔白でも、示せなければ意味がない ―― 平時の記録こそが、いざという時の盾になる。</p>`);
+  return notes.join(""); }
+function assessScore(){ const abAvg=(state.ab.jikken+state.ab.toukei+state.ab.shidou+state.ab.hasshin)/4;
+  return Math.round(state.evidence*0.5 + state.integ*0.5 + state.cred*0.5 + abAvg*0.6 + state.skills.length*4 + (state.whistleblew?10:0) - (state.complicit?12:0) + (state.auditCleared?6:0) - ((state.fabricated&&!state.corrected)?60:0) + (state.diff==="hard"?18:state.diff==="easy"?-12:0)); }
+function assessRank(){ const s=assessScore(); return s>=205?"S":s>=170?"A":s>=135?"B":s>=100?"C":"D"; }
+function rankSeal(){ const r=assessRank(); const col={ S:"#c45c3e", A:"#2d6a4f", B:"#1a5f7a", C:"#4a5c58", D:"#8a8577" }[r]||"#4a5c58";
+  return `<div class="rankseal" style="--rc:${col}"><span class="rankseal-r">${r}</span><span class="rankseal-l">査定</span></div>`; }
+function finalTitle(){ if(state.fabricated && !state.corrected) return "研究不正者"; if(state.whistleblew || state.auditCleared) return "研究公正の守り手";
+  const ab=state.ab, top=Object.keys(ab).sort((a,b)=>ab[b]-ab[a])[0];
+  if((state.students.taku.grow>=70||state.students.misaki.grow>=70) && ab.shidou>=70) return "名伯楽（めいはくらく）";
+  if(ab[top]<75) return "堅実な実務家";
+  return { jikken:"ベンチの魔術師", toukei:"統計の鬼", shidou:"名伯楽（めいはくらく）", hasshin:"発信力の旗手" }[top]; }
+function endTitleHTML(){ return `<div style="margin:0 auto 1rem;max-width:34rem"><div style="font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted)">査定ランク <b style="font-family:var(--serif);font-size:1.15rem;color:var(--teal-dark)">${assessRank()}</b>　／　称号</div><div style="font-family:var(--serif);font-size:1.2rem;color:var(--teal-dark)">「${finalTitle()}」</div></div>`; }
+function endCardHTML(){ const abs=[["jikken","実験力"],["toukei","統計力"],["shidou","指導力"],["hasshin","発信力"]];
+  const cells=abs.map(([k,l])=>{ const v=state.ab[k],g=grade(v); return `<div class="abcell"><span class="an">${l}</span><span class="amini"><i style="width:${v}%"></i></span><span class="grade g-${g}">${g}</span></div>`; }).join("");
+  const sk=state.skills.length?state.skills.map(id=>`<span class="skill">✦ ${SKILLS[id]?SKILLS[id].name:id}</span>`).join(""):'<span class="empty2">―</span>';
+  return `<div class="card" style="max-width:34rem;margin:0 auto 1.2rem;text-align:left"><h3>最終能力カード（助教）</h3><div class="abgrid">${cells}</div><div class="skills">${sk}</div></div>`; }
+function endingScreen(endId, figFn, verdict, verdictColor, title, story, win){ return { fullscreen:true, endId, confetti:!!win,
+  html:`<div class="scene ending"><div class="ending-hero">${figFn()}${rankSeal()}</div><div class="ending-in">
+    <div class="verdict" style="color:${verdictColor}">${verdict}</div><h2>${title}</h2><p class="story">${story}</p>${epilogue()}
+    ${endTitleHTML()}${endCardHTML()}${scoreCards()}${ctaBlock()}<p class="foot" style="margin-top:1.4rem">難易度：${curDiff().name}／テーマ：${themeObj().name}／偽陽性の型：${ARTIFACT[state.theme]||'―'}／${BACKGROUNDS[state.bg].name}でプレイ</p></div></div>`, choices:[] }; }
+function figTrophy(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#0c3d3a,#12463f);"><div class="fig-center"><svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#a8dadc" stroke-width="1.4" class="rise"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z" fill="rgba(168,218,220,.15)"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" stroke-linecap="round"/><circle class="shine" cx="12" cy="7" r="2" fill="#ffd166" stroke="none"/></svg></div></div>`; }
+function figSealPaper(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#eef3f5,#e2ecee);">${figPaper()}</div>`; }
+function figSealWarn(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#3a1113,#4a1618);"><div class="fig-center"><svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#ffb3b5" stroke-width="1.6" class="shield-body"><path d="M12 3l9 16H3z" stroke-linejoin="round" fill="rgba(155,34,38,.4)"/><path d="M12 9v5M12 17h.01" stroke-linecap="round"/></svg></div></div>`; }
+function figSealClock(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#3a2c12,#4a3818);"><div class="fig-center"><svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#ffd8a8" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/></path></svg></div></div>`; }
+function figSealCoin(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#3a2c12,#4a3818);"><div class="fig-center"><svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#ffd8a8" stroke-width="1.6" class="rise"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0" stroke-linecap="round"/></svg></div></div>`; }
+function figSealFired(){ return `<div style="position:absolute; inset:0; background:linear-gradient(#2a2622,#3a332c);"><div class="fig-center"><svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#c9c2b4" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-linecap="round"/><path d="M16 17l5-5-5-5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12H9" stroke-linecap="round"/></svg></div></div>`; }
+SCENES.end_best=()=>{ logOnce("🏆 研究成果を発表し、准教授に内定","win"); return endingScreen("end_best",figTrophy,"栄転 ―― 准教授内定","var(--green)","再現性のある発見で、次のステージへ",
+  `${themeObj().name} のリードは用量反応でも効き、査読者の「どうやった？」には監査 trail が即答した。出典付きの条件、E-stop に守られた実行、FDR で裏取りした解析 ―― すべてが一本の loop でつながっている。<br><br>
+   そして評価されたのは論文だけではない。<b>あなたが育てた後輩</b>が独り立ちし、研究室はあなたを中心に回り始めた。教授会は満場一致で、あなたの<b>准教授昇任</b>を承認する。<br><br>
+   霧島教授「これは"それっぽい成果"じゃない。<b>再現できる成果</b>と、<b>次を育てる力</b>だ。……いい助教だったよ。次は同僚として、頼む。」`, true); };
+SCENES.end_ok=()=>{ logOnce("📄 成果は出たが薄氷の発表","win"); return endingScreen("end_ok",figSealPaper,"研究成果 ―― 辛勝","var(--teal)","成果は出た。だが、薄氷だった",
+  `ヒットは形になり論文は出た。しかし確認は甘く、あるいは予算と時間を使い切ってのゴールだった。霧島教授「通ったのは通った。……次はもう少し、対照と用量反応に余裕を持とう。」<br><br>loop は回った。あとはどれだけ堅く閉じられるか ―― それが再現性の差になる。`, false); };
+SCENES.end_retract=()=>{ logOnce("⚠ 撤回 ―― 捏造の露見","gate"); return endingScreen("end_retract",figSealWarn,"敗北 ―― 論文撤回","var(--warn)","水増しは、trail に残っていた",
+  `追試で報告値が再現されず、監査 trail が生データとの乖離を突きつけた。論文は撤回。霧島教授「……速さのために誠実さを売ったな。loop は止めようとした。止めなかったのは君だ。」<br><br>捏造ゲートは何度もあなたを止めようとした。Autolab Loop が守ろうとしていたのは、まさにこの結末からだった。`, false); };
+SCENES.end_timeout=()=>{ logOnce("⏳ 時間切れ ―― loop を閉じ切れず","gate"); return endingScreen("end_timeout",figSealClock,"敗北 ―― 時間切れ","var(--gold)","ベンチで時間が尽きた",
+  `再現性のある成果に届く前に、任期が終わった。エビデンスは ${state.evidence} 止まり。霧島教授「筋は悪くなかった。ただ、一周ごとの手数が多すぎた。」<br><br>ヒントは"どこで根拠づけに時間をかけ、どこで機械に任せるか"。loop の速さは、正しい省き方から生まれる。`, false); };
+SCENES.end_broke=()=>{ logOnce("💴 予算切れ ―― loop 停止","gate"); return endingScreen("end_broke",figSealCoin,"敗北 ―― 予算切れ","var(--gold)","研究費が底をついた",
+  `やり直しと外注が重なり、次のプレートを流す金が残らなかった。エビデンスは ${state.evidence} 止まり。霧島教授「一枚のプレートを無駄にする重みを、次は最初に効かせよう。」<br><br>Autolab Loop の QC と E-stop は、まさに"無駄なプレート"を減らすためにある。`, false); };
+SCENES.end_fired=()=>{ logOnce("🚪 解雇 ―― Autolab Loop を活かせず","gate"); return endingScreen("end_fired",figSealFired,"敗北 ―― 解雇通告","var(--warn)","「君には、任せられない」",
+  `霧島教授は静かに言った。「高いシステムを入れたのは、"それっぽい研究"を量産するためじゃない。<br>君は loop を使わなかった ―― 出典を飛ばし、ゲートを避け、E-stop を軽んじ、QC を握りつぶした。結果は<b>再現せず、予算と時間だけが溶けた</b>。警告もした。」<br><br>
+   ${state.warnings?`（警告 ${state.warnings} 回）　`:""}あなたは研究室を去ることになった。荷物をまとめる背に、ループの通知音だけが淡々と鳴っていた。<br><br>
+   <b>Autolab Loop は道具ではなく、規律だ。</b>正しく使う者だけが、効率と再現性を ―― そして自分の職を ―― 守れる。`, false); };
+function logOnce(text,kind){ if(!state._ended){ log(text,kind); state._ended=true; } }
+
+
+/* ============================================================
+   起動・配線
+   ============================================================ */
+
+/* ---- 90-main.js ---- */
+function bootTitle(){ Object.assign(state, freshState()); prevHud=null; render("title"); }
+document.addEventListener("click",(e)=>{ audioInit(); audioResume(); const id=e.target && e.target.id;
+  if(id==="muteTop"){ e.preventDefault(); setMuted(!AUDIO.muted); if(!AUDIO.muted) sfx("select"); return; }
+  if(id==="dataTop"){ e.preventDefault(); showConsentBar(); return; }
+  if(id==="consentYes"){ e.preventDefault(); setTelemetryConsent(true); return; }
+  if(id==="consentNo"){ e.preventDefault(); setTelemetryConsent(false); return; }
+  if(id==="startBtn"){ e.preventDefault(); clearSave(); telNewSession(); Object.assign(state,freshState()); prevHud=null; render("difficulty_pick"); }
+  else if(id==="continueBtn"){ e.preventDefault(); telNewSession(); if(!loadGame()){ toast("セーブの読み込みに失敗しました"); bootTitle(); } }
+  else if(id==="replayBtn"){ e.preventDefault(); clearSave(); telNewSession(); bootTitle(); }
+  else if(id==="restartTop"){ e.preventDefault(); if(!confirm("最初からやり直しますか？（保存データは消えます）")) return; clearSave(); bootTitle(); }
+  else if(id==="suspendTop"){ e.preventDefault(); if(!state.theme){ return; } toast("進行を保存しました。タイトルへ戻ります"); render("title"); }
+  else if(id==="shareBtn"){ e.preventDefault(); shareResult(); }
+});
+function shareResult(){ const t=themeObj();
+  const line=`オートラボ・クエストで「${t.name}」を研究 → エビデンス${state.evidence}・整合性${state.integ}でクリア。同僚の捏造疑惑や競合レースをくぐり抜けるバイオ研究ゲーム、Autolab Loop 製。`;
+  const url=location.href;
+  if(navigator.share){ navigator.share({ title:"オートラボ・クエスト", text:line, url }).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(line+" "+url).then(()=>toast("結果をコピーしました！SNS に貼り付けてください"),()=>toast(line)); }
+  else toast(line); }
+document.addEventListener("keydown",(e)=>{
+  const n=parseInt(e.key,10);
+  if(!isNaN(n)&&n>=1&&n<=9){ const btns=stage.querySelectorAll(".choice"); if(btns[n-1]){ e.preventDefault(); btns[n-1].click(); } return; }
+  // Enter / Space advances a single-choice beat, or the primary button on the
+  // title / ending (fullscreen) — but never auto-picks when there's a real choice.
+  if(e.key==="Enter"||e.key===" "){ const choices=stage.querySelectorAll(".choice");
+    if(choices.length===1){ e.preventDefault(); choices[0].click(); return; }
+    if(choices.length===0){ const primary=stage.querySelector(".btn--solid,.btn--big"); if(primary){ e.preventDefault(); primary.click(); } } }
+});
+
+// Seed gameplay RNG: real time in the browser (varied runs), fixed fallback
+// where Date is unavailable (e.g. the test sandbox) so tests are deterministic.
+try { seedRng((typeof Date !== "undefined" && Date.now) ? (Date.now() & 0x7fffffff) : 0x12345678); }
+catch (e) { seedRng(0x12345678); }
+
+initAmbient();
+updateMuteBtn();
+// Always initialize state before the first render — the title's paint*() read
+// state fields, and a saved game only affects the "つづきから" button (which
+// reads localStorage), not the title's own state.
+bootTitle();
+updateDataBtn();       // reflect current data-donation state on the 📊 top link
+maybeConsent();        // first run (consent unset): show the opt-in banner
+telFlushAll();         // resend any events buffered while an endpoint was offline
+
+</script>
+</body>
+</html>
