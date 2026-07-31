@@ -1439,7 +1439,7 @@ function codexPanel(){
 SCENES.title=()=>{ const sv=hasSave();
   return { fullscreen:true,
   html:`<div class="scene"><div class="hero"><div class="hero-stage">${figTitle()}</div>
-    <div class="kick">Autolab Loop 研究室シミュレーション</div>
+    <div class="kick">Autolab Loop が“ある”世界線 ― 研究室シミュレーション</div>
     <h1>オートラボ・クエスト<br><em>DMTA ループで新薬を見つけろ</em></h1>
     <p class="sub">あなたは大学研究室に着任した<b>助教</b>。自分の研究テーマを回しながら、<b>後輩を育て</b>、実力（能力値）を磨き、
     <b>再現性のある研究成果</b>を出して<b>准教授</b>を目指す。研究費・時間・体力・やる気は有限。同僚の捏造疑惑、研究室の揉め事、
@@ -1462,6 +1462,19 @@ SCENES.title=()=>{ const sv=hasSave();
     </ul>${sv?'<p class="continue-note">保存データがあります。「つづきから」で再開できます。</p>':''}</div>
     ${codexPanel()}
   </div></div>`, choices:[] }; };
+
+/* ---------- プロローグ：Autolab Loop が「ある」世界線 ---------- */
+SCENES.prologue=()=>({ badge:"202X ― 世界線", badgeClass:"story", speaker:"loop", mood:"talk", sl:"soft", title:"Autolab Loop の、ある世界",
+  body:`<p>《起動》 ―― おはようございます。私は <b>Autolab Loop</b>。この研究室の<em>実行 OS</em> です。</p>
+    <p>かつて、創薬は<em>歳月</em>の仕事でした。一つの仮説に、何ヶ月も。手順は人の記憶に頼り、<b>都合の悪いデータは、静かに消せた</b>。</p>
+    <p>―― けれど、<b>この世界線は違います。</b><br>
+    <b>設計・実測・解析・次の一手</b>を、私が一本のループで回します。根拠のない手順は<b>実行前に止め</b>、逸脱は<b>E-stop</b>で遮断し、あなたの手はすべて<b>監査 trail</b> に刻む。<em>だから、誰も後から嘘をつけない。</em></p>
+    ${figBox("accel")}
+    <p>この世界では、研究は <b>速く・安全で・再現する</b>。<br>さあ ―― <b>あなたは、その世界の研究者です。</b></p>`,
+  loop:"ここから先、私はずっとあなたの傍にいます。迷ったら私の言葉（この枠）を読んでください。正しく使うほど、あなたの研究は前に進みます。",
+  choices:[
+    { t:"この世界で、研究を始める", d:"Autolab Loop のある研究室に着任する。", cost:[["世界線：Autolab Loop","pos"],["いざ","pos"]], go(){ return "difficulty_pick"; } },
+  ] });
 
 /* ---------- 着任 ---------- */
 SCENES.difficulty_pick=()=>({ badge:"難易度選択", badgeClass:"story", figure:"loop", title:"研究人生の、厳しさを選ぶ",
@@ -2647,7 +2660,7 @@ document.addEventListener("click",(e)=>{ unlockAudio(); const id=e.target && e.t
   if(id==="dataTop"){ e.preventDefault(); showConsentBar(); return; }
   if(id==="consentYes"){ e.preventDefault(); setTelemetryConsent(true); return; }
   if(id==="consentNo"){ e.preventDefault(); setTelemetryConsent(false); return; }
-  if(id==="startBtn"){ e.preventDefault(); clearSave(); telNewSession(); Object.assign(state,freshState()); prevHud=null; render("difficulty_pick"); }
+  if(id==="startBtn"){ e.preventDefault(); clearSave(); telNewSession(); Object.assign(state,freshState()); prevHud=null; render("prologue"); }
   else if(id==="continueBtn"){ e.preventDefault(); telNewSession(); if(!loadGame()){ toast("セーブの読み込みに失敗しました"); bootTitle(); } }
   else if(id==="replayBtn"){ e.preventDefault(); clearSave(); telNewSession(); bootTitle(); }
   else if(id==="restartTop"){ e.preventDefault(); if(!confirm("最初からやり直しますか？（保存データは消えます）")) return; clearSave(); bootTitle(); }
