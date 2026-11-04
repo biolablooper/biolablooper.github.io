@@ -1,0 +1,1 @@
+import{w as e}from"./HomeLayout-rA0ITCmo.js";import{a as t,n,t as r}from"./legal-BKubfKdh.js";var i=e();function a(){return(0,i.jsx)(t,{kicker:`Privacy`,title:`プライバシーポリシー`,lead:`当サイトが取得する情報は、お問い合わせフォームの入力内容とアクセスログだけです。解析ツール・広告 Cookie は使っていません。`,updated:n,sections:r})}export{a as default};
