@@ -1,0 +1,1 @@
+import{w as e}from"./HomeLayout-BH8PrubQ.js";import{a as t,i as n,r}from"./legal-D2XPCvNT.js";var i=e();function a(){return(0,i.jsx)(t,{kicker:`Terms`,title:`利用規約・免責事項`,lead:`本サービスは研究支援ソフトウェアです。診断・治療を目的としたものではなく、実験の実施と結果の判断は利用者に帰属します。`,updated:n,sections:r})}export{a as default};
